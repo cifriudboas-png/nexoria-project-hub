@@ -14,6 +14,35 @@ export type Database = {
   }
   public: {
     Tables: {
+      inventory_items: {
+        Row: {
+          acquired_at: string
+          id: string
+          item_id: string
+          user_id: string
+        }
+        Insert: {
+          acquired_at?: string
+          id?: string
+          item_id: string
+          user_id: string
+        }
+        Update: {
+          acquired_at?: string
+          id?: string
+          item_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventory_items_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           account_number: number
@@ -21,6 +50,7 @@ export type Database = {
           equipped_hair: string | null
           equipped_shirt: string | null
           id: string
+          nexos: number
           username: string
         }
         Insert: {
@@ -29,6 +59,7 @@ export type Database = {
           equipped_hair?: string | null
           equipped_shirt?: string | null
           id: string
+          nexos?: number
           username: string
         }
         Update: {
@@ -37,6 +68,7 @@ export type Database = {
           equipped_hair?: string | null
           equipped_shirt?: string | null
           id?: string
+          nexos?: number
           username?: string
         }
         Relationships: []
@@ -46,6 +78,8 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      catalog_price: { Args: { _item: string }; Returns: number }
+      purchase_item: { Args: { _item: string }; Returns: undefined }
       set_equipped_hair: { Args: { _hair: string }; Returns: undefined }
       set_equipped_shirt: { Args: { _shirt: string }; Returns: undefined }
     }

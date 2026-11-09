@@ -43,6 +43,13 @@
       "when": 1794248487126,
       "tag": "0005_avatar_equipped_hair",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1794249166771,
+      "tag": "0006_catalog_purchases_inventory",
+      "breakpoints": true
     }
   ]
 }
