@@ -22,6 +22,20 @@
       "when": 1794245589636,
       "tag": "0002_add_account_number_to_profiles",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1794247038126,
+      "tag": "0003_avatar_equipped_shirt",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1794247072058,
+      "tag": "0004_avatar_unequip_empty_string",
+      "breakpoints": true
     }
   ]
 }
