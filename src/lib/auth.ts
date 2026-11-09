@@ -98,8 +98,12 @@ export async function signUpWithUsername(
   });
 
   if (error) {
-    if (error.message.toLowerCase().includes('already registered')) {
+    const message = error.message.toLowerCase();
+    if (error.code === 'user_already_exists' || message.includes('already registered')) {
       throw new AuthError('usernameTaken');
+    }
+    if (error.code === 'weak_password' || message.includes('weak')) {
+      throw new AuthError('passwordWeak');
     }
     throw new AuthError('genericError');
   }
