@@ -18,18 +18,28 @@ type PreferencesProviderProps = {
 };
 
 export default function PreferencesProvider({ children }: PreferencesProviderProps) {
-  const [theme, setTheme] = useState<Theme>(readStoredTheme);
-  const [language, setLanguage] = useState<Language>(readStoredLanguage);
+  // Defaults render on the server; stored choices load after hydration.
+  const [theme, setTheme] = useState<Theme>('light');
+  const [language, setLanguage] = useState<Language>('pt');
+  const [isLoaded, setIsLoaded] = useState(false);
 
   useEffect(() => {
+    setTheme(readStoredTheme());
+    setLanguage(readStoredLanguage());
+    setIsLoaded(true);
+  }, []);
+
+  useEffect(() => {
+    if (!isLoaded) return;
     document.documentElement.classList.toggle('dark', theme === 'dark');
     localStorage.setItem(THEME_STORAGE_KEY, theme);
-  }, [theme]);
+  }, [theme, isLoaded]);
 
   useEffect(() => {
+    if (!isLoaded) return;
     document.documentElement.lang = language === 'pt' ? 'pt-BR' : 'en';
     localStorage.setItem(LANGUAGE_STORAGE_KEY, language);
-  }, [language]);
+  }, [language, isLoaded]);
 
   const value = useMemo(
     () => ({
