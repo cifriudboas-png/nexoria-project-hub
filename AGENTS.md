@@ -35,3 +35,4 @@ use the editor.
 - Theme and language preferences load from localStorage only after hydration (in `PreferencesProvider` effects), because the page is server-rendered and storage reads during render cause mismatches.
 - Accounts sign in with a username mapped to a synthetic internal email, so email auto-confirm must stay on and email-based password reset is not available.
 - Avatar items a player equips are saved on their own `profiles` row and changed only through a narrow security-definer RPC (e.g. `set_equipped_shirt`), because profiles has no general update policy and usernames/account numbers must stay read-only.
+- Avatar 3D items (like hair) are built from CSS 3D pieces (`CharacterBlock` boxes, `CharacterSpike` pyramids) inside the existing CSS character viewer, not three.js, so they match and rotate with the imported character renderer.
