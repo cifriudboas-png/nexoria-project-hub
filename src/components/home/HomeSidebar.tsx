@@ -15,7 +15,7 @@ import {
 import { usePreferences } from '@/lib/preferences-context';
 import type { TranslationKey } from '@/lib/translations';
 
-export type HomeView = 'home' | 'profile';
+export type HomeView = 'home' | 'profile' | 'catalog';
 
 type SidebarItem = {
   label: TranslationKey;
