@@ -1,13 +1,21 @@
 import { useState, type FormEvent } from 'react';
 import { Check, Minus, PackageOpen, Plus, Search } from 'lucide-react';
-import CharacterViewer from '@/components/avatar/CharacterViewer';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
-import { HAIR_ITEMS, type HairId } from '@/lib/avatar';
+import ItemThumbnail from '@/components/home/ItemThumbnail';
+import {
+  AlertDialog,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from '@/components/ui/alert-dialog';
+import { canAfford, HAIR_ITEMS, PurchaseError, type HairItem, type HairId } from '@/lib/avatar';
 import { usePreferences } from '@/lib/preferences-context';
 import type { TranslationKey } from '@/lib/translations';
 
 // Categories (and parents) each hair item is listed under.
-const HAIR_CATEGORIES = ['all', 'featured', 'featured-all', 'featured-accessories', 'accessories', 'accessories-hair'];
+const HAIR_CATEGORIES = ['all', 'featured', 'featured-all', 'body', 'body-hair'];
 
 function normalizeSearch(text: string): string {
   return text
@@ -18,11 +26,13 @@ function normalizeSearch(text: string): string {
 
 type CatalogViewProps = {
   look: CharacterLook;
-  equippedHair: HairId | null;
-  isSaving: boolean;
-  saveFailed: boolean;
-  onEquipHair: (hair: HairId | null) => void;
+  nexos: number;
+  ownedHair: HairId[];
+  onPurchase: (hair: HairId) => Promise<void>;
+  onOpenInventory: () => void;
 };
+
+type PurchaseStep = 'confirm' | 'buying' | 'done';
 
 type CatalogCategory = {
   id: string;
@@ -66,6 +76,7 @@ const CATEGORIES: CatalogCategory[] = [
     id: 'body',
     label: 'catalogBodyParts',
     subcategories: [
+      { id: 'body-hair', label: 'catalogHair' },
       { id: 'body-heads', label: 'catalogHeads' },
       { id: 'body-faces', label: 'catalogFaces' },
       { id: 'body-packages', label: 'catalogPackages' },
@@ -85,7 +96,6 @@ const CATEGORIES: CatalogCategory[] = [
     label: 'catalogAccessories',
     subcategories: [
       { id: 'accessories-hats', label: 'catalogHats' },
-      { id: 'accessories-hair', label: 'catalogHair' },
       { id: 'accessories-face', label: 'catalogFaceAccessories' },
       { id: 'accessories-back', label: 'catalogBack' },
     ],
@@ -117,8 +127,30 @@ function findLabel(id: string): TranslationKey {
   return 'catalogAll';
 }
 
-export default function CatalogView({ look, equippedHair, isSaving, saveFailed, onEquipHair }: CatalogViewProps) {
+export default function CatalogView({ look, nexos, ownedHair, onPurchase, onOpenInventory }: CatalogViewProps) {
   const { t } = usePreferences();
+  const [buying, setBuying] = useState<HairItem | null>(null);
+  const [step, setStep] = useState<PurchaseStep>('confirm');
+  const [purchaseError, setPurchaseError] = useState<TranslationKey | null>(null);
+
+  const startPurchase = (item: HairItem) => {
+    setBuying(item);
+    setStep('confirm');
+    setPurchaseError(canAfford(item, nexos) ? null : 'purchaseErrorInsufficient');
+  };
+
+  const confirmPurchase = async () => {
+    if (!buying) return;
+    setStep('buying');
+    setPurchaseError(null);
+    try {
+      await onPurchase(buying.id);
+      setStep('done');
+    } catch (error) {
+      setPurchaseError(error instanceof PurchaseError ? error.key : 'purchaseErrorGeneric');
+      setStep('confirm');
+    }
+  };
   const [selected, setSelected] = useState('featured-all');
   const [expanded, setExpanded] = useState<string[]>(['featured']);
   const [query, setQuery] = useState('');
@@ -263,51 +295,41 @@ export default function CatalogView({ look, equippedHair, isSaving, saveFailed, 
           </div>
 
           {visibleHair.length > 0 ? (
-            <>
-              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
-                {visibleHair.map((item) => {
-                  const isEquipped = item.id === equippedHair;
-                  return (
-                    <article
-                      key={item.id}
-                      className={`relative overflow-hidden rounded-lg bg-white shadow-sm dark:bg-stone-900 ${
-                        isEquipped ? 'ring-2 ring-emerald-500' : 'ring-1 ring-stone-900/5 dark:ring-white/10'
-                      }`}
-                    >
-                      {isEquipped && (
-                        <span className="absolute right-0 top-0 z-10 flex h-8 w-8 items-start justify-end bg-emerald-500 p-1 text-white [clip-path:polygon(0_0,100%_0,100%_100%)]">
+            <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+              {visibleHair.map((item) => {
+                const isOwned = ownedHair.includes(item.id);
+                return (
+                  <article
+                    key={item.id}
+                    className="relative overflow-hidden rounded-lg bg-white shadow-sm ring-1 ring-stone-900/5 dark:bg-stone-900 dark:ring-white/10"
+                  >
+                    <div className="aspect-square bg-gradient-to-b from-stone-50 to-stone-200 dark:from-stone-800 dark:to-stone-950">
+                      <ItemThumbnail kind="hair" id={item.id} look={look} />
+                    </div>
+                    <div className="p-3">
+                      <h3 className="line-clamp-2 text-sm font-semibold text-stone-800 dark:text-stone-100">{t(item.name)}</h3>
+                      <p className="mt-1 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                        {item.priceNexos} {t('nexos')}
+                      </p>
+                      {isOwned ? (
+                        <p className="mt-3 flex w-full items-center justify-center gap-1 rounded-md bg-stone-100 px-3 py-1.5 text-xs font-semibold text-stone-600 dark:bg-stone-800 dark:text-stone-300">
                           <Check className="h-3.5 w-3.5" />
-                        </span>
-                      )}
-                      <div className="aspect-square bg-gradient-to-b from-stone-50 to-stone-200 dark:from-stone-800 dark:to-stone-950">
-                        <CharacterViewer className="h-full w-full" framing="head" look={look} hair={item.id} />
-                      </div>
-                      <div className="p-3">
-                        <h3 className="line-clamp-2 text-sm font-semibold text-stone-800 dark:text-stone-100">{t(item.name)}</h3>
-                        <p className="mt-1 text-sm font-bold text-emerald-700 dark:text-emerald-400">
-                          {item.priceNexos} {t('nexos')}
+                          {t('catalogOwned')}
                         </p>
+                      ) : (
                         <button
                           type="button"
-                          aria-pressed={isEquipped}
-                          onClick={() => onEquipHair(isEquipped ? null : item.id)}
-                          className={`mt-3 w-full rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 ${
-                            isEquipped
-                              ? 'bg-stone-200 text-stone-800 hover:bg-stone-300 dark:bg-stone-800 dark:text-stone-100 dark:hover:bg-stone-700'
-                              : 'bg-emerald-600 text-white hover:bg-emerald-700'
-                          }`}
+                          onClick={() => startPurchase(item)}
+                          className="mt-3 w-full rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-200 hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
                         >
-                          {isEquipped ? t('catalogTakeOff') : t('catalogWear')}
+                          {t('catalogBuy')}
                         </button>
-                      </div>
-                    </article>
-                  );
-                })}
-              </div>
-              <p className="mt-2 h-5 text-xs text-stone-500 dark:text-stone-400" role="status">
-                {isSaving ? t('avatarSaving') : saveFailed ? <span className="text-red-700 dark:text-red-400">{t('avatarSaveError')}</span> : null}
-              </p>
-            </>
+                      )}
+                    </div>
+                  </article>
+                );
+              })}
+            </div>
           ) : (
             <div className="mt-4 flex min-h-[20rem] flex-col items-center justify-center rounded-xl border-2 border-dashed border-stone-300 bg-white/60 px-6 py-12 text-center dark:border-stone-700 dark:bg-stone-900/60">
               <PackageOpen className="h-12 w-12 text-stone-400 dark:text-stone-500" />
@@ -319,6 +341,86 @@ export default function CatalogView({ look, equippedHair, isSaving, saveFailed, 
           )}
         </section>
       </div>
+      <AlertDialog
+        open={buying !== null}
+        onOpenChange={(open) => {
+          if (!open && step !== 'buying') setBuying(null);
+        }}
+      >
+        <AlertDialogContent>
+          {buying && step === 'done' ? (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('catalogBoughtTitle')}</AlertDialogTitle>
+                <AlertDialogDescription>{t('catalogBoughtText', { item: t(buying.name) })}</AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <button
+                  type="button"
+                  onClick={() => setBuying(null)}
+                  className="rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition-colors duration-200 hover:bg-stone-100 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
+                >
+                  {t('catalogClose')}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setBuying(null);
+                    onOpenInventory();
+                  }}
+                  className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-emerald-700"
+                >
+                  {t('catalogGoToInventory')}
+                </button>
+              </AlertDialogFooter>
+            </>
+          ) : buying ? (
+            <>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t('catalogConfirmTitle')}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t('catalogConfirmText', { item: t(buying.name), price: buying.priceNexos })}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <div className="flex items-center gap-4">
+                <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg bg-gradient-to-b from-stone-50 to-stone-200 dark:from-stone-800 dark:to-stone-950">
+                  <ItemThumbnail kind="hair" id={buying.id} look={look} />
+                </div>
+                <div className="text-sm">
+                  <p className="font-semibold text-stone-800 dark:text-stone-100">{t(buying.name)}</p>
+                  <p className="font-bold text-emerald-700 dark:text-emerald-400">
+                    {buying.priceNexos} {t('nexos')}
+                  </p>
+                  <p className="mt-1 text-xs text-stone-500 dark:text-stone-400">{t('catalogBalance', { nexos })}</p>
+                </div>
+              </div>
+              {purchaseError && (
+                <p role="alert" className="rounded-md bg-red-50 px-3 py-2 text-sm text-red-700 dark:bg-red-950/50 dark:text-red-300">
+                  {t(purchaseError)}
+                </p>
+              )}
+              <AlertDialogFooter>
+                <button
+                  type="button"
+                  disabled={step === 'buying'}
+                  onClick={() => setBuying(null)}
+                  className="rounded-md border border-stone-300 px-4 py-2 text-sm font-semibold text-stone-700 transition-colors duration-200 hover:bg-stone-100 disabled:opacity-60 dark:border-stone-700 dark:text-stone-200 dark:hover:bg-stone-800"
+                >
+                  {t('catalogCancel')}
+                </button>
+                <button
+                  type="button"
+                  disabled={step === 'buying' || !canAfford(buying, nexos)}
+                  onClick={confirmPurchase}
+                  className="rounded-md bg-emerald-600 px-4 py-2 text-sm font-semibold text-white transition-colors duration-200 hover:bg-emerald-700 disabled:cursor-not-allowed disabled:opacity-60"
+                >
+                  {step === 'buying' ? t('catalogBuying') : t('catalogBuy')}
+                </button>
+              </AlertDialogFooter>
+            </>
+          ) : null}
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

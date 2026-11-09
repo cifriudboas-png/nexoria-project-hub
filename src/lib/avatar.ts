@@ -22,9 +22,34 @@ export type EquippedOutfit = {
   hair: HairId | null;
 };
 
+export type AvatarState = EquippedOutfit & {
+  ownedHair: HairId[];
+  nexos: number;
+};
+
+export type PurchaseErrorKey = 'purchaseErrorInsufficient' | 'purchaseErrorOwned' | 'purchaseErrorGeneric';
+
+export class PurchaseError extends Error {
+  readonly key: PurchaseErrorKey;
+
+  constructor(key: PurchaseErrorKey) {
+    super(key);
+    this.key = key;
+  }
+}
+
 export const SHIRT_ITEMS: ShirtItem[] = [{ id: 'nexoria_logo', name: 'avatarShirtNexoria', imageUrl: nexoriaLogo.url }];
 
 export const HAIR_ITEMS: HairItem[] = [{ id: 'cool_blond_hair', name: 'avatarHairCoolBlond', priceNexos: 0 }];
+
+export function getHairItem(id: HairId | null): HairItem | null {
+  return HAIR_ITEMS.find((item) => item.id === id) ?? null;
+}
+
+/** Whether a player with this many Nexos can buy the item now. */
+export function canAfford(item: HairItem, nexos: number): boolean {
+  return nexos >= item.priceNexos;
+}
 
 export function getShirtItem(id: ShirtId | null): ShirtItem | null {
   return SHIRT_ITEMS.find((item) => item.id === id) ?? null;
@@ -38,22 +63,35 @@ function isHairId(value: unknown): value is HairId {
   return HAIR_ITEMS.some((item) => item.id === value);
 }
 
-export async function getEquippedOutfit(): Promise<EquippedOutfit> {
+export async function getAvatarState(): Promise<AvatarState> {
+  const empty: AvatarState = { shirt: null, hair: null, ownedHair: [], nexos: 0 };
   const { data: sessionData, error: sessionError } = await supabase.auth.getSession();
   if (sessionError) throw sessionError;
   const userId = sessionData.session?.user.id;
-  if (!userId) return { shirt: null, hair: null };
+  if (!userId) return empty;
 
-  const { data, error } = await supabase
-    .from('profiles')
-    .select('equipped_shirt, equipped_hair')
-    .eq('id', userId)
-    .maybeSingle();
-  if (error) throw error;
+  const [profileResult, inventoryResult] = await Promise.all([
+    supabase.from('profiles').select('equipped_shirt, equipped_hair, nexos').eq('id', userId).maybeSingle(),
+    supabase.from('inventory_items').select('item_id').eq('user_id', userId),
+  ]);
+  if (profileResult.error) throw profileResult.error;
+  if (inventoryResult.error) throw inventoryResult.error;
+
+  const profile = profileResult.data;
   return {
-    shirt: isShirtId(data?.equipped_shirt) ? data.equipped_shirt : null,
-    hair: isHairId(data?.equipped_hair) ? data.equipped_hair : null,
+    shirt: isShirtId(profile?.equipped_shirt) ? profile.equipped_shirt : null,
+    hair: isHairId(profile?.equipped_hair) ? profile.equipped_hair : null,
+    ownedHair: (inventoryResult.data ?? []).map((row) => row.item_id).filter(isHairId),
+    nexos: Number(profile?.nexos ?? 0),
   };
+}
+
+export async function purchaseItem(itemId: HairId): Promise<void> {
+  const { error } = await supabase.rpc('purchase_item', { _item: itemId });
+  if (!error) return;
+  if (error.message.includes('insufficient_nexos')) throw new PurchaseError('purchaseErrorInsufficient');
+  if (error.message.includes('already_owned')) throw new PurchaseError('purchaseErrorOwned');
+  throw new PurchaseError('purchaseErrorGeneric');
 }
 
 export async function saveEquippedShirt(shirt: ShirtId | null): Promise<void> {

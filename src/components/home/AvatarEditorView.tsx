@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
-import { Check, ChevronRight, Shirt } from 'lucide-react';
+import { Check, ChevronRight } from 'lucide-react';
+import ItemThumbnail from '@/components/home/ItemThumbnail';
 import CharacterViewer from '@/components/avatar/CharacterViewer';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
 import { HAIR_ITEMS, SHIRT_ITEMS, type HairId, type ShirtId } from '@/lib/avatar';
@@ -19,6 +20,7 @@ type AvatarEditorViewProps = {
   look: CharacterLook;
   equippedShirt: ShirtId | null;
   equippedHair: HairId | null;
+  ownedHair: HairId[];
   isSaving: boolean;
   saveFailed: boolean;
   onEquipShirt: (shirt: ShirtId | null) => void;
@@ -39,6 +41,7 @@ export default function AvatarEditorView({
   look,
   equippedShirt,
   equippedHair,
+  ownedHair,
   isSaving,
   saveFailed,
   onEquipShirt,
@@ -55,20 +58,10 @@ export default function AvatarEditorView({
       name: item.name,
       isEquipped,
       onToggle: () => onEquipShirt(isEquipped ? null : item.id),
-      thumbnail: (
-        <div className="relative flex h-full w-full items-center justify-center p-3">
-          <Shirt className="absolute h-full w-full p-3 text-white drop-shadow dark:text-stone-200" strokeWidth={1} fill="currentColor" />
-          <img
-            src={item.imageUrl}
-            alt=""
-            draggable={false}
-            className="relative w-1/3 object-contain transition-transform duration-300 group-hover:scale-110"
-          />
-        </div>
-      ),
+      thumbnail: <ItemThumbnail kind="shirt" id={item.id} look={look} />,
     };
   });
-  const hairItems: EditorItem[] = HAIR_ITEMS.map((item) => {
+  const hairItems: EditorItem[] = HAIR_ITEMS.filter((item) => ownedHair.includes(item.id)).map((item) => {
     const isEquipped = item.id === equippedHair;
     return {
       key: `hair-${item.id}`,
@@ -76,13 +69,13 @@ export default function AvatarEditorView({
       name: item.name,
       isEquipped,
       onToggle: () => onEquipHair(isEquipped ? null : item.id),
-      thumbnail: <CharacterViewer className="h-full w-full" framing="head" look={look} hair={item.id} />,
+      thumbnail: <ItemThumbnail kind="hair" id={item.id} look={look} />,
     };
   });
   const items =
     tab === 'clothing'
       ? shirtItems
-      : tab === 'accessories'
+      : tab === 'body'
         ? hairItems
         : tab === 'wearing'
           ? [...shirtItems, ...hairItems].filter((item) => item.isEquipped)
