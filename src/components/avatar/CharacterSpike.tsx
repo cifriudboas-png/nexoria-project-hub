@@ -41,14 +41,17 @@ export default function CharacterSpike({ x, y, z, base, height, rx = 0, ry = 0, 
           key={index}
           className="absolute"
           style={{
-            width: base,
-            height: slant,
+            // Triangle drawn with borders: far cheaper to render in 3D than a clip-path.
+            width: 0,
+            height: 0,
             left: -half,
             top: -slant,
+            borderLeft: `${half}px solid transparent`,
+            borderRight: `${half}px solid transparent`,
+            borderBottom: `${slant}px solid ${faceBackground(color, shade)}`,
             transformOrigin: '50% 100%',
             transform: `rotateY(${index * 90}deg) translateZ(${half}px) rotateX(${tilt}deg)`,
-            clipPath: 'polygon(50% 0, 100% 100%, 0 100%)',
-            background: faceBackground(color, shade),
+            backfaceVisibility: 'hidden',
           }}
         />
       ))}
