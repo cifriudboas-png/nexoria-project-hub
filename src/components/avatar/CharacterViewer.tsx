@@ -28,9 +28,19 @@ type CharacterViewerProps = {
   interactive?: boolean;
   shirt?: ShirtId | null;
   hair?: HairId | null;
+  /** Fixed turn angle in degrees; when set, the character stays still at this angle. */
+  fixedYaw?: number | null;
 };
 
-export default function CharacterViewer({ className, framing, look, interactive = false, shirt = null, hair = null }: CharacterViewerProps) {
+export default function CharacterViewer({
+  className,
+  framing,
+  look,
+  interactive = false,
+  shirt = null,
+  hair = null,
+  fixedYaw = null,
+}: CharacterViewerProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -40,12 +50,14 @@ export default function CharacterViewer({ className, framing, look, interactive 
     const stage = stageRef.current;
     if (!container || !stage) return;
 
-    let yaw = INITIAL_YAW;
+    const isFixed = fixedYaw !== null;
+    let yaw = isFixed ? fixedYaw : INITIAL_YAW;
+    const tilt = isFixed ? 0 : -8;
     const applyTransform = () => {
-      stage.style.transform = `${FRAMING_TRANSFORM[framing]} rotateX(-8deg) rotateY(${yaw}deg)`;
+      stage.style.transform = `${FRAMING_TRANSFORM[framing]} rotateX(${tilt}deg) rotateY(${yaw}deg)`;
     };
     applyTransform();
-    if (!interactive) return;
+    if (!interactive || isFixed) return;
 
     const reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
     let dragging = false;
@@ -87,14 +99,20 @@ export default function CharacterViewer({ className, framing, look, interactive 
       container.removeEventListener('pointerup', handlePointerUp);
       container.removeEventListener('pointercancel', handlePointerUp);
     };
-  }, [framing, interactive]);
+  }, [framing, interactive, fixedYaw]);
+
+  const isRotatable = interactive && fixedYaw === null;
 
   return (
     <div
       ref={containerRef}
       aria-hidden="true"
-      className={`relative select-none overflow-hidden ${interactive ? 'cursor-grab touch-none' : ''} ${className}`}
-      style={{ perspective: FRAMING_PERSPECTIVE[framing], transform: 'translateZ(0)', isolation: 'isolate' }}
+      className={`relative select-none overflow-hidden ${isRotatable ? 'cursor-grab touch-none' : ''} ${className}`}
+      style={{
+        perspective: fixedYaw === null ? FRAMING_PERSPECTIVE[framing] : 'none',
+        transform: 'translateZ(0)',
+        isolation: 'isolate',
+      }}
     >
       <div
         ref={stageRef}

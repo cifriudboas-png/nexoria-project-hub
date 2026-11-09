@@ -16,6 +16,9 @@ const TABS: { id: EditorTab; label: TranslationKey }[] = [
   { id: 'accessories', label: 'avatarTabAccessories' },
 ];
 
+// In 2D view the character stands still, turned toward the left of the screen.
+const FACING_LEFT_YAW = -30;
+
 type AvatarEditorViewProps = {
   look: CharacterLook;
   equippedShirt: ShirtId | null;
@@ -50,6 +53,7 @@ export default function AvatarEditorView({
 }: AvatarEditorViewProps) {
   const { t } = usePreferences();
   const [tab, setTab] = useState<EditorTab>('wearing');
+  const [is3D, setIs3D] = useState(true);
   const shirtItems: EditorItem[] = SHIRT_ITEMS.map((item) => {
     const isEquipped = item.id === equippedShirt;
     return {
@@ -103,13 +107,29 @@ export default function AvatarEditorView({
       <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="lg:w-72 lg:shrink-0">
           <div className="relative h-96 overflow-hidden rounded-xl bg-gradient-to-b from-amber-50 via-stone-200 to-stone-400 shadow-sm ring-1 ring-stone-900/5 dark:from-stone-700 dark:via-stone-800 dark:to-stone-950 dark:ring-white/10">
-            <CharacterViewer className="h-full w-full" framing="full" look={look} shirt={equippedShirt} hair={equippedHair} interactive />
-            <span className="pointer-events-none absolute bottom-3 right-3 rounded-md bg-white/90 px-2 py-1 text-xs font-bold text-stone-800 shadow dark:bg-stone-900/90 dark:text-stone-100">
-              3D
-            </span>
-            <p className="pointer-events-none absolute bottom-4 left-0 right-0 text-center text-xs font-medium text-stone-700/80 dark:text-stone-400">
-              {t('dragToRotate')}
-            </p>
+            <CharacterViewer
+              className="h-full w-full"
+              framing="full"
+              look={look}
+              shirt={equippedShirt}
+              hair={equippedHair}
+              interactive
+              fixedYaw={is3D ? null : FACING_LEFT_YAW}
+            />
+            <button
+              type="button"
+              onClick={() => setIs3D((current) => !current)}
+              aria-label={is3D ? t('viewSwitchTo2D') : t('viewSwitchTo3D')}
+              title={is3D ? t('viewSwitchTo2D') : t('viewSwitchTo3D')}
+              className="absolute bottom-3 right-3 z-10 rounded-md bg-white/90 px-2 py-1 text-xs font-bold text-stone-800 shadow transition-colors duration-200 hover:bg-white focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 dark:bg-stone-900/90 dark:text-stone-100 dark:hover:bg-stone-900"
+            >
+              {is3D ? '3D' : '2D'}
+            </button>
+            {is3D && (
+              <p className="pointer-events-none absolute bottom-4 left-0 right-0 text-center text-xs font-medium text-stone-700/80 dark:text-stone-400">
+                {t('dragToRotate')}
+              </p>
+            )}
           </div>
           <p className="mt-2 h-5 text-xs text-stone-500 dark:text-stone-400" role="status">
             {isSaving ? t('avatarSaving') : saveFailed ? <span className="text-red-700 dark:text-red-400">{t('avatarSaveError')}</span> : null}
