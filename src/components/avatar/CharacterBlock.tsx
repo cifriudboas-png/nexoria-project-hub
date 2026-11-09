@@ -1,0 +1,65 @@
+import type { ReactNode } from 'react';
+
+type CharacterBlockProps = {
+  x: number;
+  y: number;
+  w: number;
+  h: number;
+  d: number;
+  color: string;
+  front?: ReactNode;
+};
+
+type Face = {
+  key: string;
+  width: number;
+  height: number;
+  transform: string;
+  shade: number;
+};
+
+function faceBackground(color: string, shade: number): string {
+  if (shade >= 1) return color;
+  const overlay = 1 - shade;
+  return `linear-gradient(rgba(0,0,0,${overlay}), rgba(0,0,0,${overlay})), ${color}`;
+}
+
+export default function CharacterBlock({ x, y, w, h, d, color, front }: CharacterBlockProps) {
+  const faces: Face[] = [
+    { key: 'front', width: w, height: h, transform: `translateZ(${d / 2}px)`, shade: 1 },
+    { key: 'back', width: w, height: h, transform: `rotateY(180deg) translateZ(${d / 2}px)`, shade: 0.7 },
+    { key: 'right', width: d, height: h, transform: `rotateY(90deg) translateZ(${w / 2}px)`, shade: 0.82 },
+    { key: 'left', width: d, height: h, transform: `rotateY(-90deg) translateZ(${w / 2}px)`, shade: 0.82 },
+    { key: 'top', width: w, height: d, transform: `rotateX(90deg) translateZ(${h / 2}px)`, shade: 1 },
+    { key: 'bottom', width: w, height: d, transform: `rotateX(-90deg) translateZ(${h / 2}px)`, shade: 0.6 },
+  ];
+
+  return (
+    <div
+      className="absolute left-0 top-0"
+      style={{
+        width: w,
+        height: h,
+        transformStyle: 'preserve-3d',
+        transform: `translate3d(${x - w / 2}px, ${y - h / 2}px, 0)`,
+      }}
+    >
+      {faces.map((face) => (
+        <div
+          key={face.key}
+          className="absolute flex items-center justify-center"
+          style={{
+            width: face.width,
+            height: face.height,
+            left: (w - face.width) / 2,
+            top: (h - face.height) / 2,
+            transform: face.transform,
+            background: faceBackground(color, face.shade),
+          }}
+        >
+          {face.key === 'front' ? front : null}
+        </div>
+      ))}
+    </div>
+  );
+}
