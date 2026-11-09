@@ -8,6 +8,13 @@
       "when": 1794245559893,
       "tag": "0000_create_profiles_with_username_signup",
       "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794245573119,
+      "tag": "0001_drop_username_availability_function",
+      "breakpoints": true
     }
   ]
 }
