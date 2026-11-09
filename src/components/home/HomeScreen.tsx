@@ -3,7 +3,16 @@ import { Bomb, Box, Pizza, Youtube } from 'lucide-react';
 import CharacterViewer from '@/components/avatar/CharacterViewer';
 import AvatarEditorView from '@/components/home/AvatarEditorView';
 import CatalogView from '@/components/home/CatalogView';
-import { getEquippedOutfit, saveEquippedHair, saveEquippedShirt, type HairId, type ShirtId } from '@/lib/avatar';
+import {
+  getAvatarState,
+  getHairItem,
+  purchaseItem,
+  saveEquippedHair,
+  saveEquippedShirt,
+  type HairId,
+  type ShirtId,
+} from '@/lib/avatar';
+import InventoryView from '@/components/home/InventoryView';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
 import ExperienceCard from '@/components/home/ExperienceCard';
 import HomeSidebar, { type HomeView } from '@/components/home/HomeSidebar';
@@ -32,17 +41,21 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
   // Guests keep the logo print they always had; it is not saved for them.
   const [equippedShirt, setEquippedShirt] = useState<ShirtId | null>(isGuest ? 'nexoria_logo' : null);
   const [equippedHair, setEquippedHair] = useState<HairId | null>(null);
+  const [ownedHair, setOwnedHair] = useState<HairId[]>([]);
+  const [nexos, setNexos] = useState(0);
   const [isSaving, setIsSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
     if (isGuest) return;
     let isActive = true;
-    getEquippedOutfit()
-      .then((outfit) => {
+    getAvatarState()
+      .then((state) => {
         if (!isActive) return;
-        setEquippedShirt(outfit.shirt);
-        setEquippedHair(outfit.hair);
+        setEquippedShirt(state.shirt);
+        setEquippedHair(state.hair);
+        setOwnedHair(state.ownedHair);
+        setNexos(state.nexos);
       })
       .catch(() => undefined);
     return () => {
@@ -82,12 +95,21 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
     }
   };
 
+  // Guests' purchases only last for this visit; signed-in purchases are saved.
+  const handlePurchase = async (hair: HairId) => {
+    const price = getHairItem(hair)?.priceNexos ?? 0;
+    if (!isGuest) await purchaseItem(hair);
+    setOwnedHair((current) => (current.includes(hair) ? current : [...current, hair]));
+    setNexos((current) => current - price);
+  };
+
   const openProfile = () => setView('profile');
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-200 dark:bg-stone-950">
       <HomeTopBar
         displayName={displayName}
+        nexos={nexos}
         activeView={view}
         onNavigate={setView}
         onSignOut={onSignOut}
@@ -103,6 +125,7 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
               look={look}
               equippedShirt={equippedShirt}
               equippedHair={equippedHair}
+              ownedHair={ownedHair}
               isSaving={isSaving}
               saveFailed={saveFailed}
               onEquipShirt={handleEquipShirt}
@@ -112,10 +135,22 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
           ) : view === 'catalog' ? (
             <CatalogView
               look={look}
+              nexos={nexos}
+              ownedHair={ownedHair}
+              onPurchase={handlePurchase}
+              onOpenInventory={() => setView('inventory')}
+            />
+          ) : view === 'inventory' ? (
+            <InventoryView
+              look={look}
+              ownedHair={ownedHair}
+              equippedShirt={equippedShirt}
               equippedHair={equippedHair}
               isSaving={isSaving}
               saveFailed={saveFailed}
+              onEquipShirt={handleEquipShirt}
               onEquipHair={handleEquipHair}
+              onOpenCatalog={() => setView('catalog')}
             />
           ) : view === 'profile' ? (
             <ProfileView displayName={displayName} look={look} isGuest={isGuest} shirt={equippedShirt} hair={equippedHair} />

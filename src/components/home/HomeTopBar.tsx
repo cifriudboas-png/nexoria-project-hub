@@ -6,6 +6,7 @@ import type { TranslationKey } from '@/lib/translations';
 
 type HomeTopBarProps = {
   displayName: string;
+  nexos: number;
   activeView: HomeView;
   onNavigate: (view: HomeView) => void;
   onSignOut: () => void;
@@ -18,7 +19,7 @@ const NAV_LINKS: { label: TranslationKey; view?: HomeView }[] = [
   { label: 'navCreate' },
 ];
 
-export default function HomeTopBar({ displayName, activeView, onNavigate, onSignOut, onOpenProfile }: HomeTopBarProps) {
+export default function HomeTopBar({ displayName, nexos, activeView, onNavigate, onSignOut, onOpenProfile }: HomeTopBarProps) {
   const { t } = usePreferences();
 
   return (
@@ -59,7 +60,7 @@ export default function HomeTopBar({ displayName, activeView, onNavigate, onSign
         <div className="ml-auto flex shrink-0 items-center gap-3 sm:gap-4">
           <div className="flex items-center gap-1.5 text-sm sm:gap-2">
             <span className="font-semibold">{t('nexos')}</span>
-            <span className="rounded-md bg-sky-800 px-2 py-0.5 font-mono text-sky-50">0</span>
+            <span className="rounded-md bg-sky-800 px-2 py-0.5 font-mono text-sky-50">{nexos}</span>
           </div>
           <SettingsMenu />
           <button
