@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Bomb, Box, Pizza, Youtube } from 'lucide-react';
 import CharacterViewer from '@/components/avatar/CharacterViewer';
+import CatalogView from '@/components/home/CatalogView';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
 import ExperienceCard from '@/components/home/ExperienceCard';
 import HomeSidebar, { type HomeView } from '@/components/home/HomeSidebar';
@@ -31,13 +32,21 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
 
   return (
     <div className="flex min-h-screen flex-col bg-stone-200 dark:bg-stone-950">
-      <HomeTopBar displayName={displayName} onSignOut={onSignOut} onOpenProfile={openProfile} />
+      <HomeTopBar
+        displayName={displayName}
+        activeView={view}
+        onNavigate={setView}
+        onSignOut={onSignOut}
+        onOpenProfile={openProfile}
+      />
 
       <div className="flex flex-1 flex-col md:flex-row md:items-start">
         <HomeSidebar displayName={displayName} activeView={view} onNavigate={setView} />
 
         <main className="min-w-0 flex-1 px-4 pb-12 pt-8 sm:px-8 lg:px-12">
-          {view === 'profile' ? (
+          {view === 'catalog' ? (
+            <CatalogView />
+          ) : view === 'profile' ? (
             <ProfileView displayName={displayName} look={look} isGuest={isGuest} />
           ) : (
             <>
