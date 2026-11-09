@@ -109,6 +109,20 @@ const PT = {
   catalogBuyNexos: 'Comprar Nexos',
   catalogEmptyTitle: 'Nenhum item por aqui ainda',
   catalogEmptyText: 'O catálogo ainda está vazio. Novos itens vão aparecer aqui em breve.',
+  avatarTitle: 'Editor de Avatar',
+  avatarExploreCatalog: 'Explore o catálogo para encontrar mais roupas',
+  avatarGetMore: 'Ver mais',
+  avatarTabRecent: 'Recentes',
+  avatarTabClothing: 'Roupas',
+  avatarTabBody: 'Corpo',
+  avatarTabAnimations: 'Animações',
+  avatarTabOutfits: 'Trajes',
+  avatarAll: 'Todos',
+  avatarShirtNexoria: 'Estampa NEXORIA',
+  avatarEmptyTitle: 'Nada por aqui ainda',
+  avatarEmptyText: 'Você ainda não tem itens nesta categoria.',
+  avatarSaving: 'Salvando...',
+  avatarSaveError: 'Não foi possível salvar. Tente novamente.',
 } as const;
 
 export type TranslationKey = keyof typeof PT;
@@ -222,6 +236,20 @@ const EN: Record<TranslationKey, string> = {
   catalogBuyNexos: 'Buy Nexos',
   catalogEmptyTitle: 'No items here yet',
   catalogEmptyText: 'The catalog is still empty. New items will show up here soon.',
+  avatarTitle: 'Avatar Editor',
+  avatarExploreCatalog: 'Explore the catalog to find more clothes',
+  avatarGetMore: 'Get more',
+  avatarTabRecent: 'Recent',
+  avatarTabClothing: 'Clothing',
+  avatarTabBody: 'Body',
+  avatarTabAnimations: 'Animations',
+  avatarTabOutfits: 'Outfits',
+  avatarAll: 'All',
+  avatarShirtNexoria: 'NEXORIA print',
+  avatarEmptyTitle: 'Nothing here yet',
+  avatarEmptyText: 'You do not have any items in this category yet.',
+  avatarSaving: 'Saving...',
+  avatarSaveError: 'We could not save. Please try again.',
 };
 
 const TRANSLATIONS: Record<Language, Record<TranslationKey, string>> = { pt: PT, en: EN };
