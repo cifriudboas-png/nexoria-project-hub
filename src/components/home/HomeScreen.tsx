@@ -1,7 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Bomb, Box, Pizza, Youtube } from 'lucide-react';
 import CharacterViewer from '@/components/avatar/CharacterViewer';
+import AvatarEditorView from '@/components/home/AvatarEditorView';
 import CatalogView from '@/components/home/CatalogView';
+import { getEquippedShirt, saveEquippedShirt, type ShirtId } from '@/lib/avatar';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
 import ExperienceCard from '@/components/home/ExperienceCard';
 import HomeSidebar, { type HomeView } from '@/components/home/HomeSidebar';
@@ -27,6 +29,39 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
   const { displayName, isGuest } = account;
   const look: CharacterLook = isGuest ? 'guest' : 'starter';
   const [view, setView] = useState<HomeView>('home');
+  // Guests keep the logo print they always had; it is not saved for them.
+  const [equippedShirt, setEquippedShirt] = useState<ShirtId | null>(isGuest ? 'nexoria_logo' : null);
+  const [isSaving, setIsSaving] = useState(false);
+  const [saveFailed, setSaveFailed] = useState(false);
+
+  useEffect(() => {
+    if (isGuest) return;
+    let isActive = true;
+    getEquippedShirt()
+      .then((shirt) => {
+        if (isActive) setEquippedShirt(shirt);
+      })
+      .catch(() => undefined);
+    return () => {
+      isActive = false;
+    };
+  }, [isGuest]);
+
+  const handleEquipShirt = async (shirt: ShirtId | null) => {
+    const previous = equippedShirt;
+    setEquippedShirt(shirt);
+    setSaveFailed(false);
+    if (isGuest) return;
+    setIsSaving(true);
+    try {
+      await saveEquippedShirt(shirt);
+    } catch {
+      setEquippedShirt(previous);
+      setSaveFailed(true);
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const openProfile = () => setView('profile');
 
@@ -44,10 +79,19 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
         <HomeSidebar displayName={displayName} activeView={view} onNavigate={setView} />
 
         <main className="min-w-0 flex-1 px-4 pb-12 pt-8 sm:px-8 lg:px-12">
-          {view === 'catalog' ? (
+          {view === 'avatar' ? (
+            <AvatarEditorView
+              look={look}
+              equippedShirt={equippedShirt}
+              isSaving={isSaving}
+              saveFailed={saveFailed}
+              onEquipShirt={handleEquipShirt}
+              onOpenCatalog={() => setView('catalog')}
+            />
+          ) : view === 'catalog' ? (
             <CatalogView />
           ) : view === 'profile' ? (
-            <ProfileView displayName={displayName} look={look} isGuest={isGuest} />
+            <ProfileView displayName={displayName} look={look} isGuest={isGuest} shirt={equippedShirt} />
           ) : (
             <>
               <section className="flex items-end gap-6">
@@ -57,7 +101,7 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
                   aria-label={t('openProfile')}
                   className="relative h-24 w-24 shrink-0 cursor-pointer rounded-full border-4 border-white bg-gradient-to-br from-sky-300 to-sky-500 shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 dark:border-stone-800 sm:h-32 sm:w-32"
                 >
-                  <CharacterViewer className="h-full w-full rounded-full" framing="bust" look={look} />
+                  <CharacterViewer className="h-full w-full rounded-full" framing="bust" look={look} shirt={equippedShirt} />
                 </button>
                 <h1 className="pb-2 text-4xl font-black leading-tight tracking-tight text-stone-900 dark:text-stone-100 sm:text-6xl">
                   {t('greetingPrefix')}
