@@ -34,3 +34,4 @@ use the editor.
 - The NEXORIA app is one page at `/` (`src/routes/index.tsx` renders `src/components/NexoriaApp.tsx`); its screens switch with React state, not routes, because it was imported from a single-page Vite app and kept as-is.
 - Theme and language preferences load from localStorage only after hydration (in `PreferencesProvider` effects), because the page is server-rendered and storage reads during render cause mismatches.
 - Accounts sign in with a username mapped to a synthetic internal email, so email auto-confirm must stay on and email-based password reset is not available.
+- Avatar items a player equips are saved on their own `profiles` row and changed only through a narrow security-definer RPC (e.g. `set_equipped_shirt`), because profiles has no general update policy and usernames/account numbers must stay read-only.

@@ -133,7 +133,7 @@ export default function AvatarEditorView({
                         />
                       </div>
                     </div>
-                    <p className="truncate px-2 py-2 text-xs font-medium text-stone-800 dark:text-stone-100">{t(item.name)}</p>
+                    <p className="line-clamp-2 px-2 py-2 text-xs font-medium text-stone-800 dark:text-stone-100">{t(item.name)}</p>
                   </button>
                 );
               })}
