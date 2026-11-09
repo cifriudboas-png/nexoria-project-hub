@@ -1,21 +1,24 @@
 import { LogOut } from 'lucide-react';
+import type { HomeView } from '@/components/home/HomeSidebar';
 import SettingsMenu from '@/components/home/SettingsMenu';
 import { usePreferences } from '@/lib/preferences-context';
 import type { TranslationKey } from '@/lib/translations';
 
 type HomeTopBarProps = {
   displayName: string;
+  activeView: HomeView;
+  onNavigate: (view: HomeView) => void;
   onSignOut: () => void;
   onOpenProfile: () => void;
 };
 
-const NAV_LINKS: { label: TranslationKey; active: boolean }[] = [
-  { label: 'navGames', active: true },
-  { label: 'navCatalog', active: false },
-  { label: 'navCreate', active: false },
+const NAV_LINKS: { label: TranslationKey; view?: HomeView }[] = [
+  { label: 'navGames', view: 'home' },
+  { label: 'navCatalog', view: 'catalog' },
+  { label: 'navCreate' },
 ];
 
-export default function HomeTopBar({ displayName, onSignOut, onOpenProfile }: HomeTopBarProps) {
+export default function HomeTopBar({ displayName, activeView, onNavigate, onSignOut, onOpenProfile }: HomeTopBarProps) {
   const { t } = usePreferences();
 
   return (
@@ -31,22 +34,26 @@ export default function HomeTopBar({ displayName, onSignOut, onOpenProfile }: Ho
         </div>
 
         <nav className="hidden items-center gap-1 md:flex" aria-label={t('menuLabel')}>
-          {NAV_LINKS.map(({ label, active }) => (
-            <button
-              key={label}
-              type="button"
-              disabled={!active}
-              aria-current={active ? 'page' : undefined}
-              title={active ? undefined : t('comingSoon')}
-              className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 disabled:cursor-not-allowed ${
-                active
-                  ? 'bg-sky-800 text-white'
-                  : 'text-sky-100 hover:bg-sky-600 hover:text-white disabled:hover:bg-transparent disabled:hover:text-sky-100'
-              }`}
-            >
-              {t(label)}
-            </button>
-          ))}
+          {NAV_LINKS.map(({ label, view }) => {
+            const isActive = view !== undefined && view === activeView;
+            return (
+              <button
+                key={label}
+                type="button"
+                disabled={!view}
+                onClick={view ? () => onNavigate(view) : undefined}
+                aria-current={isActive ? 'page' : undefined}
+                title={view ? undefined : t('comingSoon')}
+                className={`whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 disabled:cursor-not-allowed ${
+                  isActive
+                    ? 'bg-sky-800 text-white'
+                    : 'text-sky-100 hover:bg-sky-600 hover:text-white disabled:hover:bg-transparent disabled:hover:text-sky-100'
+                }`}
+              >
+                {t(label)}
+              </button>
+            );
+          })}
         </nav>
 
         <div className="ml-auto flex shrink-0 items-center gap-3 sm:gap-4">
@@ -79,19 +86,23 @@ export default function HomeTopBar({ displayName, onSignOut, onOpenProfile }: Ho
         className="flex gap-1 overflow-x-auto px-3 pb-2 md:hidden"
         aria-label={t('menuLabel')}
       >
-        {NAV_LINKS.map(({ label, active }) => (
-          <button
-            key={label}
-            type="button"
-            disabled={!active}
-            aria-current={active ? 'page' : undefined}
-            className={`shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 disabled:cursor-not-allowed ${
-              active ? 'bg-sky-800 text-white' : 'text-sky-100 disabled:opacity-70'
-            }`}
-          >
-            {t(label)}
-          </button>
-        ))}
+        {NAV_LINKS.map(({ label, view }) => {
+          const isActive = view !== undefined && view === activeView;
+          return (
+            <button
+              key={label}
+              type="button"
+              disabled={!view}
+              onClick={view ? () => onNavigate(view) : undefined}
+              aria-current={isActive ? 'page' : undefined}
+              className={`shrink-0 whitespace-nowrap rounded-md px-3 py-1.5 text-sm font-medium transition-colors duration-200 disabled:cursor-not-allowed ${
+                isActive ? 'bg-sky-800 text-white' : 'text-sky-100 hover:bg-sky-600 disabled:opacity-70 disabled:hover:bg-transparent'
+              }`}
+            >
+              {t(label)}
+            </button>
+          );
+        })}
       </nav>
     </header>
   );

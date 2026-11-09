@@ -1,0 +1,247 @@
+import { useState, type FormEvent } from 'react';
+import { Minus, PackageOpen, Plus, Search } from 'lucide-react';
+import { usePreferences } from '@/lib/preferences-context';
+import type { TranslationKey } from '@/lib/translations';
+
+type CatalogCategory = {
+  id: string;
+  label: TranslationKey;
+  subcategories?: { id: string; label: TranslationKey }[];
+};
+
+const CATEGORIES: CatalogCategory[] = [
+  { id: 'all', label: 'catalogAll' },
+  {
+    id: 'featured',
+    label: 'catalogFeatured',
+    subcategories: [
+      { id: 'featured-all', label: 'catalogFeaturedAll' },
+      { id: 'featured-accessories', label: 'catalogFeaturedAccessories' },
+      { id: 'featured-animations', label: 'catalogFeaturedAnimations' },
+      { id: 'featured-faces', label: 'catalogFeaturedFaces' },
+      { id: 'featured-gear', label: 'catalogFeaturedGear' },
+      { id: 'featured-packages', label: 'catalogFeaturedPackages' },
+    ],
+  },
+  {
+    id: 'collectibles',
+    label: 'catalogCollectibles',
+    subcategories: [
+      { id: 'collectibles-accessories', label: 'catalogAccessories' },
+      { id: 'collectibles-gear', label: 'catalogGear' },
+      { id: 'collectibles-faces', label: 'catalogFaces' },
+    ],
+  },
+  {
+    id: 'clothing',
+    label: 'catalogClothing',
+    subcategories: [
+      { id: 'clothing-shirts', label: 'catalogShirts' },
+      { id: 'clothing-tshirts', label: 'catalogTShirts' },
+      { id: 'clothing-pants', label: 'catalogPants' },
+    ],
+  },
+  {
+    id: 'body',
+    label: 'catalogBodyParts',
+    subcategories: [
+      { id: 'body-heads', label: 'catalogHeads' },
+      { id: 'body-faces', label: 'catalogFaces' },
+      { id: 'body-packages', label: 'catalogPackages' },
+    ],
+  },
+  {
+    id: 'gear',
+    label: 'catalogGear',
+    subcategories: [
+      { id: 'gear-melee', label: 'catalogMelee' },
+      { id: 'gear-ranged', label: 'catalogRanged' },
+      { id: 'gear-social', label: 'catalogSocial' },
+    ],
+  },
+  {
+    id: 'accessories',
+    label: 'catalogAccessories',
+    subcategories: [
+      { id: 'accessories-hats', label: 'catalogHats' },
+      { id: 'accessories-hair', label: 'catalogHair' },
+      { id: 'accessories-face', label: 'catalogFaceAccessories' },
+      { id: 'accessories-back', label: 'catalogBack' },
+    ],
+  },
+  {
+    id: 'animations',
+    label: 'catalogAnimations',
+    subcategories: [
+      { id: 'animations-bundles', label: 'catalogBundles' },
+      { id: 'animations-emotes', label: 'catalogEmotes' },
+    ],
+  },
+];
+
+const SORT_OPTIONS: TranslationKey[] = [
+  'catalogSortFeatured',
+  'catalogSortRelevance',
+  'catalogSortPriceLow',
+  'catalogSortPriceHigh',
+  'catalogSortRecent',
+];
+
+function findLabel(id: string): TranslationKey {
+  for (const category of CATEGORIES) {
+    if (category.id === id) return category.label;
+    const sub = category.subcategories?.find((item) => item.id === id);
+    if (sub) return sub.label;
+  }
+  return 'catalogAll';
+}
+
+export default function CatalogView() {
+  const { t } = usePreferences();
+  const [selected, setSelected] = useState('featured-all');
+  const [expanded, setExpanded] = useState<string[]>(['featured']);
+  const [query, setQuery] = useState('');
+  const [sort, setSort] = useState<TranslationKey>('catalogSortFeatured');
+  const [submittedQuery, setSubmittedQuery] = useState('');
+
+  const toggle = (id: string) =>
+    setExpanded((current) => (current.includes(id) ? current.filter((item) => item !== id) : [...current, id]));
+
+  const handleSearch = (event: FormEvent) => {
+    event.preventDefault();
+    setSubmittedQuery(query.trim());
+  };
+
+  const heading = submittedQuery
+    ? t('catalogResultsFor', { query: submittedQuery })
+    : selected === 'featured-all' || selected === 'featured'
+      ? t('catalogFeaturedHeading')
+      : t(findLabel(selected));
+
+  return (
+    <div className="mx-auto max-w-6xl">
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <h1 className="text-3xl font-black tracking-tight text-stone-900 dark:text-stone-100 sm:text-4xl">
+          {t('catalogTitle')}
+        </h1>
+
+        <form
+          onSubmit={handleSearch}
+          className="flex w-full overflow-hidden rounded-lg border border-stone-300 bg-white shadow-sm dark:border-stone-700 dark:bg-stone-900 sm:max-w-md"
+        >
+          <input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={t('catalogSearchPlaceholder')}
+            aria-label={t('catalogSearchPlaceholder')}
+            className="min-w-0 flex-1 bg-transparent px-3 py-2 text-sm text-stone-800 placeholder:text-stone-400 focus:outline-none dark:text-stone-100"
+          />
+          <select
+            value={sort}
+            onChange={(event) => setSort(event.target.value as TranslationKey)}
+            aria-label={t('catalogSortLabel')}
+            className="border-l border-stone-300 bg-transparent px-2 text-sm text-stone-700 focus:outline-none dark:border-stone-700 dark:bg-stone-900 dark:text-stone-200"
+          >
+            {SORT_OPTIONS.map((option) => (
+              <option key={option} value={option}>
+                {t(option)}
+              </option>
+            ))}
+          </select>
+          <button
+            type="submit"
+            aria-label={t('catalogSearchButton')}
+            className="flex items-center justify-center border-l border-stone-300 px-3 text-stone-600 transition-colors duration-200 hover:bg-stone-100 hover:text-stone-900 dark:border-stone-700 dark:text-stone-300 dark:hover:bg-stone-800"
+          >
+            <Search className="h-4 w-4" />
+          </button>
+        </form>
+      </div>
+
+      <div className="mt-6 flex flex-col gap-6 md:flex-row">
+        <aside className="md:w-56 md:shrink-0 md:border-r md:border-stone-300 md:pr-4 dark:md:border-stone-700">
+          <h2 className="text-xl font-semibold text-stone-800 dark:text-stone-100">{t('catalogCategory')}</h2>
+          <ul className="mt-3 space-y-0.5">
+            {CATEGORIES.map((category) => {
+              const isOpen = expanded.includes(category.id);
+              const hasSubs = Boolean(category.subcategories?.length);
+              return (
+                <li key={category.id}>
+                  <div className="flex items-center justify-between">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSubmittedQuery('');
+                        setSelected(category.id);
+                        if (hasSubs && !isOpen) toggle(category.id);
+                      }}
+                      className={`flex-1 rounded px-1 py-1.5 text-left text-sm font-semibold transition-colors duration-200 hover:text-sky-700 dark:hover:text-sky-400 ${
+                        selected === category.id ? 'text-sky-700 dark:text-sky-400' : 'text-stone-800 dark:text-stone-200'
+                      }`}
+                    >
+                      {t(category.label)}
+                    </button>
+                    {hasSubs && (
+                      <button
+                        type="button"
+                        onClick={() => toggle(category.id)}
+                        aria-expanded={isOpen}
+                        aria-label={t(category.label)}
+                        className="rounded p-1 text-stone-500 transition-colors duration-200 hover:bg-stone-300/60 hover:text-stone-800 dark:text-stone-400 dark:hover:bg-stone-800 dark:hover:text-stone-100"
+                      >
+                        {isOpen ? <Minus className="h-3.5 w-3.5" /> : <Plus className="h-3.5 w-3.5" />}
+                      </button>
+                    )}
+                  </div>
+                  {hasSubs && isOpen && (
+                    <ul className="mb-1 ml-3 space-y-0.5">
+                      {category.subcategories!.map((sub) => (
+                        <li key={sub.id}>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setSubmittedQuery('');
+                              setSelected(sub.id);
+                            }}
+                            className={`w-full rounded px-1 py-1 text-left text-xs transition-colors duration-200 hover:text-sky-700 dark:hover:text-sky-400 ${
+                              selected === sub.id
+                                ? 'font-semibold text-sky-700 dark:text-sky-400'
+                                : 'text-stone-600 dark:text-stone-400'
+                            }`}
+                          >
+                            {t(sub.label)}
+                          </button>
+                        </li>
+                      ))}
+                    </ul>
+                  )}
+                </li>
+              );
+            })}
+          </ul>
+        </aside>
+
+        <section className="min-w-0 flex-1">
+          <div className="flex items-center justify-between gap-4">
+            <h2 className="text-lg font-semibold text-stone-800 dark:text-stone-100">{heading}</h2>
+            <button
+              type="button"
+              disabled
+              title={t('comingSoon')}
+              className="shrink-0 rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white disabled:cursor-not-allowed disabled:opacity-80"
+            >
+              {t('catalogBuyNexos')}
+            </button>
+          </div>
+
+          <div className="mt-4 flex min-h-[20rem] flex-col items-center justify-center rounded-xl border-2 border-dashed border-stone-300 bg-white/60 px-6 py-12 text-center dark:border-stone-700 dark:bg-stone-900/60">
+            <PackageOpen className="h-12 w-12 text-stone-400 dark:text-stone-500" />
+            <p className="mt-4 text-base font-semibold text-stone-700 dark:text-stone-200">{t('catalogEmptyTitle')}</p>
+            <p className="mt-1 max-w-sm text-sm text-stone-500 dark:text-stone-400">{t('catalogEmptyText')}</p>
+          </div>
+        </section>
+      </div>
+    </div>
+  );
+}
