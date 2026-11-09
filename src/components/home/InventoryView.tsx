@@ -1,3 +1,4 @@
+import type { ReactNode } from 'react';
 import { Check, PackageOpen } from 'lucide-react';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
 import ItemThumbnail from '@/components/home/ItemThumbnail';
@@ -21,7 +22,7 @@ type InventoryEntry = {
   key: string;
   name: TranslationKey;
   isEquipped: boolean;
-  thumbnail: React.ReactNode;
+  thumbnail: ReactNode;
   onToggle: () => void;
 };
 
