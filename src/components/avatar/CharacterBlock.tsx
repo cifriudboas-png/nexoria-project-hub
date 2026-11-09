@@ -3,6 +3,7 @@ import type { ReactNode } from 'react';
 type CharacterBlockProps = {
   x: number;
   y: number;
+  z?: number;
   w: number;
   h: number;
   d: number;
@@ -18,13 +19,13 @@ type Face = {
   shade: number;
 };
 
-function faceBackground(color: string, shade: number): string {
+export function faceBackground(color: string, shade: number): string {
   if (shade >= 1) return color;
   const overlay = 1 - shade;
   return `linear-gradient(rgba(0,0,0,${overlay}), rgba(0,0,0,${overlay})), ${color}`;
 }
 
-export default function CharacterBlock({ x, y, w, h, d, color, front }: CharacterBlockProps) {
+export default function CharacterBlock({ x, y, z = 0, w, h, d, color, front }: CharacterBlockProps) {
   const faces: Face[] = [
     { key: 'front', width: w, height: h, transform: `translateZ(${d / 2}px)`, shade: 1 },
     { key: 'back', width: w, height: h, transform: `rotateY(180deg) translateZ(${d / 2}px)`, shade: 0.7 },
@@ -41,7 +42,7 @@ export default function CharacterBlock({ x, y, w, h, d, color, front }: Characte
         width: w,
         height: h,
         transformStyle: 'preserve-3d',
-        transform: `translate3d(${x - w / 2}px, ${y - h / 2}px, 0)`,
+        transform: `translate3d(${x - w / 2}px, ${y - h / 2}px, ${z}px)`,
       }}
     >
       {faces.map((face) => (

@@ -1,7 +1,28 @@
 import { useState, type FormEvent } from 'react';
-import { Minus, PackageOpen, Plus, Search } from 'lucide-react';
+import { Check, Minus, PackageOpen, Plus, Search } from 'lucide-react';
+import CharacterViewer from '@/components/avatar/CharacterViewer';
+import type { CharacterLook } from '@/components/avatar/characterAppearances';
+import { HAIR_ITEMS, type HairId } from '@/lib/avatar';
 import { usePreferences } from '@/lib/preferences-context';
 import type { TranslationKey } from '@/lib/translations';
+
+// Categories (and parents) each hair item is listed under.
+const HAIR_CATEGORIES = ['all', 'featured', 'featured-all', 'featured-accessories', 'accessories', 'accessories-hair'];
+
+function normalizeSearch(text: string): string {
+  return text
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .toLowerCase();
+}
+
+type CatalogViewProps = {
+  look: CharacterLook;
+  equippedHair: HairId | null;
+  isSaving: boolean;
+  saveFailed: boolean;
+  onEquipHair: (hair: HairId | null) => void;
+};
 
 type CatalogCategory = {
   id: string;
@@ -96,7 +117,7 @@ function findLabel(id: string): TranslationKey {
   return 'catalogAll';
 }
 
-export default function CatalogView() {
+export default function CatalogView({ look, equippedHair, isSaving, saveFailed, onEquipHair }: CatalogViewProps) {
   const { t } = usePreferences();
   const [selected, setSelected] = useState('featured-all');
   const [expanded, setExpanded] = useState<string[]>(['featured']);
@@ -117,6 +138,12 @@ export default function CatalogView() {
     : selected === 'featured-all' || selected === 'featured'
       ? t('catalogFeaturedHeading')
       : t(findLabel(selected));
+
+  const visibleHair = HAIR_ITEMS.filter((item) =>
+    submittedQuery
+      ? normalizeSearch(t(item.name)).includes(normalizeSearch(submittedQuery))
+      : HAIR_CATEGORIES.includes(selected),
+  );
 
   return (
     <div className="mx-auto max-w-6xl">
@@ -235,11 +262,61 @@ export default function CatalogView() {
             </button>
           </div>
 
-          <div className="mt-4 flex min-h-[20rem] flex-col items-center justify-center rounded-xl border-2 border-dashed border-stone-300 bg-white/60 px-6 py-12 text-center dark:border-stone-700 dark:bg-stone-900/60">
-            <PackageOpen className="h-12 w-12 text-stone-400 dark:text-stone-500" />
-            <p className="mt-4 text-base font-semibold text-stone-700 dark:text-stone-200">{t('catalogEmptyTitle')}</p>
-            <p className="mt-1 max-w-sm text-sm text-stone-500 dark:text-stone-400">{t('catalogEmptyText')}</p>
-          </div>
+          {visibleHair.length > 0 ? (
+            <>
+              <div className="mt-4 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4">
+                {visibleHair.map((item) => {
+                  const isEquipped = item.id === equippedHair;
+                  return (
+                    <article
+                      key={item.id}
+                      className={`relative overflow-hidden rounded-lg bg-white shadow-sm dark:bg-stone-900 ${
+                        isEquipped ? 'ring-2 ring-emerald-500' : 'ring-1 ring-stone-900/5 dark:ring-white/10'
+                      }`}
+                    >
+                      {isEquipped && (
+                        <span className="absolute right-0 top-0 z-10 flex h-8 w-8 items-start justify-end bg-emerald-500 p-1 text-white [clip-path:polygon(0_0,100%_0,100%_100%)]">
+                          <Check className="h-3.5 w-3.5" />
+                        </span>
+                      )}
+                      <div className="aspect-square bg-gradient-to-b from-stone-50 to-stone-200 dark:from-stone-800 dark:to-stone-950">
+                        <CharacterViewer className="h-full w-full" framing="head" look={look} hair={item.id} />
+                      </div>
+                      <div className="p-3">
+                        <h3 className="line-clamp-2 text-sm font-semibold text-stone-800 dark:text-stone-100">{t(item.name)}</h3>
+                        <p className="mt-1 text-sm font-bold text-emerald-700 dark:text-emerald-400">
+                          {item.priceNexos} {t('nexos')}
+                        </p>
+                        <button
+                          type="button"
+                          aria-pressed={isEquipped}
+                          onClick={() => onEquipHair(isEquipped ? null : item.id)}
+                          className={`mt-3 w-full rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 ${
+                            isEquipped
+                              ? 'bg-stone-200 text-stone-800 hover:bg-stone-300 dark:bg-stone-800 dark:text-stone-100 dark:hover:bg-stone-700'
+                              : 'bg-emerald-600 text-white hover:bg-emerald-700'
+                          }`}
+                        >
+                          {isEquipped ? t('catalogTakeOff') : t('catalogWear')}
+                        </button>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+              <p className="mt-2 h-5 text-xs text-stone-500 dark:text-stone-400" role="status">
+                {isSaving ? t('avatarSaving') : saveFailed ? <span className="text-red-700 dark:text-red-400">{t('avatarSaveError')}</span> : null}
+              </p>
+            </>
+          ) : (
+            <div className="mt-4 flex min-h-[20rem] flex-col items-center justify-center rounded-xl border-2 border-dashed border-stone-300 bg-white/60 px-6 py-12 text-center dark:border-stone-700 dark:bg-stone-900/60">
+              <PackageOpen className="h-12 w-12 text-stone-400 dark:text-stone-500" />
+              <p className="mt-4 text-base font-semibold text-stone-700 dark:text-stone-200">
+                {submittedQuery ? t('catalogNoResults') : t('catalogEmptyTitle')}
+              </p>
+              {!submittedQuery && <p className="mt-1 max-w-sm text-sm text-stone-500 dark:text-stone-400">{t('catalogEmptyText')}</p>}
+            </div>
+          )}
         </section>
       </div>
     </div>

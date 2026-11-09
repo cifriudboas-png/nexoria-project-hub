@@ -18,6 +18,7 @@ export type Database = {
         Row: {
           account_number: number
           created_at: string
+          equipped_hair: string | null
           equipped_shirt: string | null
           id: string
           username: string
@@ -25,6 +26,7 @@ export type Database = {
         Insert: {
           account_number?: number
           created_at?: string
+          equipped_hair?: string | null
           equipped_shirt?: string | null
           id: string
           username: string
@@ -32,6 +34,7 @@ export type Database = {
         Update: {
           account_number?: number
           created_at?: string
+          equipped_hair?: string | null
           equipped_shirt?: string | null
           id?: string
           username?: string
@@ -43,6 +46,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      set_equipped_hair: { Args: { _hair: string }; Returns: undefined }
       set_equipped_shirt: { Args: { _shirt: string }; Returns: undefined }
     }
     Enums: {

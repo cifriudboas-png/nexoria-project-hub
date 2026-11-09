@@ -1,8 +1,8 @@
-import { useState } from 'react';
+import { useState, type ReactNode } from 'react';
 import { Check, ChevronRight, Shirt } from 'lucide-react';
 import CharacterViewer from '@/components/avatar/CharacterViewer';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
-import { SHIRT_ITEMS, type ShirtId } from '@/lib/avatar';
+import { HAIR_ITEMS, SHIRT_ITEMS, type HairId, type ShirtId } from '@/lib/avatar';
 import { usePreferences } from '@/lib/preferences-context';
 import type { TranslationKey } from '@/lib/translations';
 
@@ -18,28 +18,75 @@ const TABS: { id: EditorTab; label: TranslationKey }[] = [
 type AvatarEditorViewProps = {
   look: CharacterLook;
   equippedShirt: ShirtId | null;
+  equippedHair: HairId | null;
   isSaving: boolean;
   saveFailed: boolean;
   onEquipShirt: (shirt: ShirtId | null) => void;
+  onEquipHair: (hair: HairId | null) => void;
   onOpenCatalog: () => void;
+};
+
+type EditorItem = {
+  key: string;
+  kind: 'shirt' | 'hair';
+  name: TranslationKey;
+  isEquipped: boolean;
+  thumbnail: ReactNode;
+  onToggle: () => void;
 };
 
 export default function AvatarEditorView({
   look,
   equippedShirt,
+  equippedHair,
   isSaving,
   saveFailed,
   onEquipShirt,
+  onEquipHair,
   onOpenCatalog,
 }: AvatarEditorViewProps) {
   const { t } = usePreferences();
   const [tab, setTab] = useState<EditorTab>('wearing');
+  const shirtItems: EditorItem[] = SHIRT_ITEMS.map((item) => {
+    const isEquipped = item.id === equippedShirt;
+    return {
+      key: `shirt-${item.id}`,
+      kind: 'shirt',
+      name: item.name,
+      isEquipped,
+      onToggle: () => onEquipShirt(isEquipped ? null : item.id),
+      thumbnail: (
+        <div className="relative flex h-full w-full items-center justify-center p-3">
+          <Shirt className="absolute h-full w-full p-3 text-white drop-shadow dark:text-stone-200" strokeWidth={1} fill="currentColor" />
+          <img
+            src={item.imageUrl}
+            alt=""
+            draggable={false}
+            className="relative w-1/3 object-contain transition-transform duration-300 group-hover:scale-110"
+          />
+        </div>
+      ),
+    };
+  });
+  const hairItems: EditorItem[] = HAIR_ITEMS.map((item) => {
+    const isEquipped = item.id === equippedHair;
+    return {
+      key: `hair-${item.id}`,
+      kind: 'hair',
+      name: item.name,
+      isEquipped,
+      onToggle: () => onEquipHair(isEquipped ? null : item.id),
+      thumbnail: <CharacterViewer className="h-full w-full" framing="head" look={look} hair={item.id} />,
+    };
+  });
   const items =
     tab === 'clothing'
-      ? SHIRT_ITEMS
-      : tab === 'wearing'
-        ? SHIRT_ITEMS.filter((item) => item.id === equippedShirt)
-        : [];
+      ? shirtItems
+      : tab === 'accessories'
+        ? hairItems
+        : tab === 'wearing'
+          ? [...shirtItems, ...hairItems].filter((item) => item.isEquipped)
+          : [];
   const tabLabel = TABS.find((entry) => entry.id === tab)?.label ?? 'avatarTabWearing';
 
   return (
@@ -63,7 +110,7 @@ export default function AvatarEditorView({
       <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="lg:w-72 lg:shrink-0">
           <div className="relative h-96 overflow-hidden rounded-xl bg-gradient-to-b from-amber-50 via-stone-200 to-stone-400 shadow-sm ring-1 ring-stone-900/5 dark:from-stone-700 dark:via-stone-800 dark:to-stone-950 dark:ring-white/10">
-            <CharacterViewer className="h-full w-full" framing="full" look={look} shirt={equippedShirt} interactive />
+            <CharacterViewer className="h-full w-full" framing="full" look={look} shirt={equippedShirt} hair={equippedHair} interactive />
             <span className="pointer-events-none absolute bottom-3 right-3 rounded-md bg-white/90 px-2 py-1 text-xs font-bold text-stone-800 shadow dark:bg-stone-900/90 dark:text-stone-100">
               3D
             </span>
@@ -107,38 +154,25 @@ export default function AvatarEditorView({
 
           {items.length > 0 ? (
             <div className="mt-3 grid grid-cols-2 gap-3 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
-              {items.map((item) => {
-                const isEquipped = item.id === equippedShirt;
-                return (
-                  <button
-                    key={item.id}
-                    type="button"
-                    aria-pressed={isEquipped}
-                    onClick={() => onEquipShirt(isEquipped ? null : item.id)}
-                    className={`group relative overflow-hidden rounded-lg bg-white text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 dark:bg-stone-900 ${
-                      isEquipped ? 'ring-2 ring-emerald-500' : 'ring-1 ring-stone-900/5 dark:ring-white/10'
-                    }`}
-                  >
-                    {isEquipped && (
-                      <span className="absolute right-0 top-0 z-10 flex h-8 w-8 items-start justify-end bg-emerald-500 p-1 text-white [clip-path:polygon(0_0,100%_0,100%_100%)]">
-                        <Check className="h-3.5 w-3.5" />
-                      </span>
-                    )}
-                    <div className="flex aspect-square items-center justify-center bg-stone-50 p-3 dark:bg-stone-800">
-                      <div className="relative flex h-full w-full items-center justify-center">
-                        <Shirt className="absolute h-full w-full text-white drop-shadow dark:text-stone-200" strokeWidth={1} fill="currentColor" />
-                        <img
-                          src={item.imageUrl}
-                          alt=""
-                          draggable={false}
-                          className="relative w-1/3 object-contain transition-transform duration-300 group-hover:scale-110"
-                        />
-                      </div>
-                    </div>
-                    <p className="line-clamp-2 px-2 py-2 text-xs font-medium text-stone-800 dark:text-stone-100">{t(item.name)}</p>
-                  </button>
-                );
-              })}
+              {items.map((item) => (
+                <button
+                  key={item.key}
+                  type="button"
+                  aria-pressed={item.isEquipped}
+                  onClick={item.onToggle}
+                  className={`group relative overflow-hidden rounded-lg bg-white text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 dark:bg-stone-900 ${
+                    item.isEquipped ? 'ring-2 ring-emerald-500' : 'ring-1 ring-stone-900/5 dark:ring-white/10'
+                  }`}
+                >
+                  {item.isEquipped && (
+                    <span className="absolute right-0 top-0 z-10 flex h-8 w-8 items-start justify-end bg-emerald-500 p-1 text-white [clip-path:polygon(0_0,100%_0,100%_100%)]">
+                      <Check className="h-3.5 w-3.5" />
+                    </span>
+                  )}
+                  <div className="aspect-square bg-stone-50 dark:bg-stone-800">{item.thumbnail}</div>
+                  <p className="line-clamp-2 px-2 py-2 text-xs font-medium text-stone-800 dark:text-stone-100">{t(item.name)}</p>
+                </button>
+              ))}
             </div>
           ) : (
             <div className="mt-3 flex min-h-[16rem] flex-col items-center justify-center rounded-xl border-2 border-dashed border-stone-300 bg-white/60 px-6 py-10 text-center dark:border-stone-700 dark:bg-stone-900/60">

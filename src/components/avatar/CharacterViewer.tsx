@@ -1,18 +1,20 @@
 import { useEffect, useRef } from 'react';
 import CharacterModel from '@/components/avatar/CharacterModel';
 import { CHARACTER_APPEARANCES, type CharacterLook } from '@/components/avatar/characterAppearances';
-import { getShirtItem, type ShirtId } from '@/lib/avatar';
+import { getShirtItem, type HairId, type ShirtId } from '@/lib/avatar';
 
-type Framing = 'bust' | 'full';
+type Framing = 'bust' | 'full' | 'head';
 
 const FRAMING_TRANSFORM: Record<Framing, string> = {
   bust: 'translateY(18px) scale(0.95)',
   full: 'translateY(4px) scale(2.2)',
+  head: 'translateY(100px) scale(1.55)',
 };
 
 const FRAMING_PERSPECTIVE: Record<Framing, string> = {
   bust: '500px',
   full: '1000px',
+  head: '600px',
 };
 
 const INITIAL_YAW = 25;
@@ -25,9 +27,10 @@ type CharacterViewerProps = {
   look: CharacterLook;
   interactive?: boolean;
   shirt?: ShirtId | null;
+  hair?: HairId | null;
 };
 
-export default function CharacterViewer({ className, framing, look, interactive = false, shirt = null }: CharacterViewerProps) {
+export default function CharacterViewer({ className, framing, look, interactive = false, shirt = null, hair = null }: CharacterViewerProps) {
 
   const containerRef = useRef<HTMLDivElement>(null);
   const stageRef = useRef<HTMLDivElement>(null);
@@ -98,7 +101,7 @@ export default function CharacterViewer({ className, framing, look, interactive 
         className="absolute left-1/2 top-1/2 h-0 w-0"
         style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
       >
-        <CharacterModel appearance={CHARACTER_APPEARANCES[look]} shirtImageUrl={getShirtItem(shirt)?.imageUrl ?? null} />
+        <CharacterModel appearance={CHARACTER_APPEARANCES[look]} shirtImageUrl={getShirtItem(shirt)?.imageUrl ?? null} hair={hair} />
       </div>
     </div>
   );

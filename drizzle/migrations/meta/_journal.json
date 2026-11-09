@@ -36,6 +36,13 @@
       "when": 1794247072058,
       "tag": "0004_avatar_unequip_empty_string",
       "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1794248487126,
+      "tag": "0005_avatar_equipped_hair",
+      "breakpoints": true
     }
   ]
 }
