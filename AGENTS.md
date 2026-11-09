@@ -28,3 +28,9 @@ use the editor.
   own key and store it in Secrets.
 - **Secrets.** Lovable manages them. Do not put secret values in the repo.
 <!-- LOVABLE:END -->
+
+## Project rules
+
+- The NEXORIA app is one page at `/` (`src/routes/index.tsx` renders `src/components/NexoriaApp.tsx`); its screens switch with React state, not routes, because it was imported from a single-page Vite app and kept as-is.
+- Theme and language preferences load from localStorage only after hydration (in `PreferencesProvider` effects), because the page is server-rendered and storage reads during render cause mismatches.
+- Accounts sign in with a username mapped to a synthetic internal email, so email auto-confirm must stay on and email-based password reset is not available.
