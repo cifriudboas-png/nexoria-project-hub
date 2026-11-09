@@ -1,5 +1,6 @@
 import { useState, type ReactNode } from 'react';
 import { Check, ChevronRight } from 'lucide-react';
+import GuestLockedNotice from '@/components/home/GuestLockedNotice';
 import ItemThumbnail from '@/components/home/ItemThumbnail';
 import CharacterViewer from '@/components/avatar/CharacterViewer';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
@@ -24,6 +25,8 @@ type AvatarEditorViewProps = {
   equippedShirt: ShirtId | null;
   equippedHair: HairId | null;
   ownedHair: HairId[];
+  /** Guests can look but not change their character. */
+  isLocked?: boolean;
   isSaving: boolean;
   saveFailed: boolean;
   onEquipShirt: (shirt: ShirtId | null) => void;
@@ -45,6 +48,7 @@ export default function AvatarEditorView({
   equippedShirt,
   equippedHair,
   ownedHair,
+  isLocked = false,
   isSaving,
   saveFailed,
   onEquipShirt,
@@ -103,6 +107,8 @@ export default function AvatarEditorView({
           </button>
         </div>
       </div>
+
+      {isLocked && <GuestLockedNotice />}
 
       <div className="mt-6 flex flex-col gap-6 lg:flex-row lg:items-start">
         <div className="lg:w-72 lg:shrink-0">
@@ -173,7 +179,11 @@ export default function AvatarEditorView({
                   type="button"
                   aria-pressed={item.isEquipped}
                   onClick={item.onToggle}
-                  className={`group relative overflow-hidden rounded-lg bg-white text-left shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 dark:bg-stone-900 ${
+                  disabled={isLocked}
+                  title={isLocked ? t('guestLockedTitle') : undefined}
+                  className={`group relative overflow-hidden rounded-lg bg-white text-left shadow-sm transition-all duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 disabled:cursor-not-allowed disabled:opacity-75 dark:bg-stone-900 ${
+                    isLocked ? '' : 'hover:-translate-y-0.5 hover:shadow-md'
+                  } ${
                     item.isEquipped ? 'ring-2 ring-emerald-500' : 'ring-1 ring-stone-900/5 dark:ring-white/10'
                   }`}
                 >
