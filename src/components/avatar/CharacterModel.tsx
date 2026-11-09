@@ -17,9 +17,13 @@ function HappyFace() {
 
 type CharacterModelProps = {
   appearance: CharacterAppearance;
+  shirtImageUrl?: string | null;
 };
 
-export default function CharacterModel({ appearance }: CharacterModelProps) {
+export default function CharacterModel({ appearance, shirtImageUrl }: CharacterModelProps) {
+  const torsoFront = shirtImageUrl ? (
+    <img src={shirtImageUrl} alt="" draggable={false} className="h-8 w-8 object-contain" />
+  ) : null;
   const shoulderX = TORSO.w / 2 + LIMB.w / 2;
   const hipX = TORSO.w / 4;
   const hipY = TORSO.h / 2 + LIMB.h / 2;
@@ -28,7 +32,7 @@ export default function CharacterModel({ appearance }: CharacterModelProps) {
   return (
     <>
       <CharacterBlock x={0} y={headY} w={HEAD_SIZE} h={HEAD_SIZE} d={HEAD_SIZE} color={appearance.skin} front={<HappyFace />} />
-      <CharacterBlock x={0} y={0} w={TORSO.w} h={TORSO.h} d={TORSO.d} color={appearance.shirt} front={appearance.torsoFront} />
+      <CharacterBlock x={0} y={0} w={TORSO.w} h={TORSO.h} d={TORSO.d} color={appearance.shirt} front={torsoFront} />
       <CharacterBlock x={-shoulderX} y={0} w={LIMB.w} h={LIMB.h} d={LIMB.d} color={appearance.sleeve} />
       <CharacterBlock x={shoulderX} y={0} w={LIMB.w} h={LIMB.h} d={LIMB.d} color={appearance.sleeve} />
       <CharacterBlock x={-hipX} y={hipY} w={LIMB.w} h={LIMB.h} d={LIMB.d} color={appearance.pants} />
