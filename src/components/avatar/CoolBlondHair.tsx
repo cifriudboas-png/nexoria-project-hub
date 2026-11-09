@@ -5,13 +5,13 @@ import CharacterSpike, { type SpikeShape } from '@/components/avatar/CharacterSp
 const HAIR_COLOR = '#FFE76A';
 
 const BLOCKS = [
-  // Cap over the top of the head, down to the hairline.
-  { x: 0, y: -56, z: -1, w: 44, h: 13, d: 44 },
+  // Thin cap on top of the head; leaves the forehead uncovered (no fringe).
+  { x: 0, y: -61, z: -1, w: 44, h: 6, d: 44 },
   // Back of the head.
-  { x: 0, y: -40, z: -19, w: 44, h: 22, d: 8 },
+  { x: 0, y: -43.5, z: -19, w: 44, h: 29, d: 8 },
   // Sides above the ears.
-  { x: -21, y: -46, z: -5, w: 4, h: 12, d: 32 },
-  { x: 21, y: -46, z: -5, w: 4, h: 12, d: 32 },
+  { x: -21, y: -49, z: -5, w: 4, h: 18, d: 32 },
+  { x: 21, y: -49, z: -5, w: 4, h: 18, d: 32 },
 ];
 
 // Spikes sweep up and to the right, like the reference drawing.
