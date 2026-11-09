@@ -18,18 +18,21 @@ export type Database = {
         Row: {
           account_number: number
           created_at: string
+          equipped_shirt: string | null
           id: string
           username: string
         }
         Insert: {
           account_number?: number
           created_at?: string
+          equipped_shirt?: string | null
           id: string
           username: string
         }
         Update: {
           account_number?: number
           created_at?: string
+          equipped_shirt?: string | null
           id?: string
           username?: string
         }
@@ -40,7 +43,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      set_equipped_shirt: { Args: { _shirt: string }; Returns: undefined }
     }
     Enums: {
       [_ in never]: never
