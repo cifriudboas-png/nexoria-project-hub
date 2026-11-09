@@ -1,5 +1,7 @@
 import CharacterBlock from '@/components/avatar/CharacterBlock';
 import type { CharacterAppearance } from '@/components/avatar/characterAppearances';
+import CoolBlondHair from '@/components/avatar/CoolBlondHair';
+import type { HairId } from '@/lib/avatar';
 
 const HEAD_SIZE = 40;
 const TORSO = { w: 40, h: 40, d: 20 };
@@ -18,9 +20,10 @@ function HappyFace() {
 type CharacterModelProps = {
   appearance: CharacterAppearance;
   shirtImageUrl?: string | null;
+  hair?: HairId | null;
 };
 
-export default function CharacterModel({ appearance, shirtImageUrl }: CharacterModelProps) {
+export default function CharacterModel({ appearance, shirtImageUrl, hair = null }: CharacterModelProps) {
   const torsoFront = shirtImageUrl ? (
     <img src={shirtImageUrl} alt="" draggable={false} className="h-8 w-8 object-contain" />
   ) : null;
@@ -37,6 +40,7 @@ export default function CharacterModel({ appearance, shirtImageUrl }: CharacterM
       <CharacterBlock x={shoulderX} y={0} w={LIMB.w} h={LIMB.h} d={LIMB.d} color={appearance.sleeve} />
       <CharacterBlock x={-hipX} y={hipY} w={LIMB.w} h={LIMB.h} d={LIMB.d} color={appearance.pants} />
       <CharacterBlock x={hipX} y={hipY} w={LIMB.w} h={LIMB.h} d={LIMB.d} color={appearance.pants} />
+      {hair === 'cool_blond_hair' && <CoolBlondHair />}
     </>
   );
 }

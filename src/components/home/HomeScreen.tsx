@@ -3,7 +3,7 @@ import { Bomb, Box, Pizza, Youtube } from 'lucide-react';
 import CharacterViewer from '@/components/avatar/CharacterViewer';
 import AvatarEditorView from '@/components/home/AvatarEditorView';
 import CatalogView from '@/components/home/CatalogView';
-import { getEquippedShirt, saveEquippedShirt, type ShirtId } from '@/lib/avatar';
+import { getEquippedOutfit, saveEquippedHair, saveEquippedShirt, type HairId, type ShirtId } from '@/lib/avatar';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
 import ExperienceCard from '@/components/home/ExperienceCard';
 import HomeSidebar, { type HomeView } from '@/components/home/HomeSidebar';
@@ -31,15 +31,18 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
   const [view, setView] = useState<HomeView>('home');
   // Guests keep the logo print they always had; it is not saved for them.
   const [equippedShirt, setEquippedShirt] = useState<ShirtId | null>(isGuest ? 'nexoria_logo' : null);
+  const [equippedHair, setEquippedHair] = useState<HairId | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [saveFailed, setSaveFailed] = useState(false);
 
   useEffect(() => {
     if (isGuest) return;
     let isActive = true;
-    getEquippedShirt()
-      .then((shirt) => {
-        if (isActive) setEquippedShirt(shirt);
+    getEquippedOutfit()
+      .then((outfit) => {
+        if (!isActive) return;
+        setEquippedShirt(outfit.shirt);
+        setEquippedHair(outfit.hair);
       })
       .catch(() => undefined);
     return () => {
@@ -57,6 +60,22 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
       await saveEquippedShirt(shirt);
     } catch {
       setEquippedShirt(previous);
+      setSaveFailed(true);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
+  const handleEquipHair = async (hair: HairId | null) => {
+    const previous = equippedHair;
+    setEquippedHair(hair);
+    setSaveFailed(false);
+    if (isGuest) return;
+    setIsSaving(true);
+    try {
+      await saveEquippedHair(hair);
+    } catch {
+      setEquippedHair(previous);
       setSaveFailed(true);
     } finally {
       setIsSaving(false);
@@ -83,15 +102,23 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
             <AvatarEditorView
               look={look}
               equippedShirt={equippedShirt}
+              equippedHair={equippedHair}
               isSaving={isSaving}
               saveFailed={saveFailed}
               onEquipShirt={handleEquipShirt}
+              onEquipHair={handleEquipHair}
               onOpenCatalog={() => setView('catalog')}
             />
           ) : view === 'catalog' ? (
-            <CatalogView />
+            <CatalogView
+              look={look}
+              equippedHair={equippedHair}
+              isSaving={isSaving}
+              saveFailed={saveFailed}
+              onEquipHair={handleEquipHair}
+            />
           ) : view === 'profile' ? (
-            <ProfileView displayName={displayName} look={look} isGuest={isGuest} shirt={equippedShirt} />
+            <ProfileView displayName={displayName} look={look} isGuest={isGuest} shirt={equippedShirt} hair={equippedHair} />
           ) : (
             <>
               <section className="flex items-end gap-6">
@@ -101,7 +128,7 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
                   aria-label={t('openProfile')}
                   className="relative h-24 w-24 shrink-0 cursor-pointer rounded-full border-4 border-white bg-gradient-to-br from-sky-300 to-sky-500 shadow-lg transition-transform duration-300 hover:scale-105 focus:outline-none focus-visible:ring-4 focus-visible:ring-sky-300 dark:border-stone-800 sm:h-32 sm:w-32"
                 >
-                  <CharacterViewer className="h-full w-full rounded-full" framing="bust" look={look} shirt={equippedShirt} />
+                  <CharacterViewer className="h-full w-full rounded-full" framing="bust" look={look} shirt={equippedShirt} hair={equippedHair} />
                 </button>
                 <h1 className="pb-2 text-4xl font-black leading-tight tracking-tight text-stone-900 dark:text-stone-100 sm:text-6xl">
                   {t('greetingPrefix')}
