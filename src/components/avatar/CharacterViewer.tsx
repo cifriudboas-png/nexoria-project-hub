@@ -8,7 +8,7 @@ type Framing = 'bust' | 'full' | 'head';
 const FRAMING_TRANSFORM: Record<Framing, string> = {
   bust: 'translateY(18px) scale(0.95)',
   full: 'translateY(4px) scale(2.2)',
-  head: 'translateY(92px) scale(1.75)',
+  head: 'translateY(100px) scale(1.55)',
 };
 
 const FRAMING_PERSPECTIVE: Record<Framing, string> = {
