@@ -16,16 +16,19 @@ export type Database = {
     Tables: {
       profiles: {
         Row: {
+          account_number: number
           created_at: string
           id: string
           username: string
         }
         Insert: {
+          account_number?: number
           created_at?: string
           id: string
           username: string
         }
         Update: {
+          account_number?: number
           created_at?: string
           id?: string
           username?: string
