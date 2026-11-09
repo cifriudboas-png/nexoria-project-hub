@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1794245559893,
+      "tag": "0000_create_profiles_with_username_signup",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1794245573119,
+      "tag": "0001_drop_username_availability_function",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1794245589636,
+      "tag": "0002_add_account_number_to_profiles",
+      "breakpoints": true
+    }
+  ]
+}
