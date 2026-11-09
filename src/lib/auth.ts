@@ -77,7 +77,7 @@ export function validateLoginForm(values: LoginFormValues): LoginFormErrors {
 export function getCurrentUsername(): Promise<string | null> {
   return supabase.auth.getSession().then(({ data, error }) => {
     if (error) throw new AuthError('genericError');
-    const username = data.session?.user.user_metadata?.username;
+    const username = data.session?.user.user_metadata?.['username'];
     return typeof username === 'string' ? username : null;
   });
 }

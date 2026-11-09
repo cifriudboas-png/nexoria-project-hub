@@ -4,7 +4,7 @@ type FormFieldProps = {
   id: string;
   label: string;
   value: string;
-  error?: string;
+  error?: string | undefined;
   disabled: boolean;
   autoComplete: string;
   type?: 'text' | 'password';
