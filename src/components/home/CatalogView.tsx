@@ -26,6 +26,8 @@ function normalizeSearch(text: string): string {
 
 type CatalogViewProps = {
   look: CharacterLook;
+  /** Guests can browse but not buy. */
+  isLocked?: boolean;
   nexos: number;
   ownedHair: HairId[];
   onPurchase: (hair: HairId) => Promise<void>;
@@ -127,13 +129,14 @@ function findLabel(id: string): TranslationKey {
   return 'catalogAll';
 }
 
-export default function CatalogView({ look, nexos, ownedHair, onPurchase, onOpenInventory }: CatalogViewProps) {
+export default function CatalogView({ look, isLocked = false, nexos, ownedHair, onPurchase, onOpenInventory }: CatalogViewProps) {
   const { t } = usePreferences();
   const [buying, setBuying] = useState<HairItem | null>(null);
   const [step, setStep] = useState<PurchaseStep>('confirm');
   const [purchaseError, setPurchaseError] = useState<TranslationKey | null>(null);
 
   const startPurchase = (item: HairItem) => {
+    if (isLocked) return;
     setBuying(item);
     setStep('confirm');
     setPurchaseError(canAfford(item, nexos) ? null : 'purchaseErrorInsufficient');
@@ -320,9 +323,11 @@ export default function CatalogView({ look, nexos, ownedHair, onPurchase, onOpen
                         <button
                           type="button"
                           onClick={() => startPurchase(item)}
-                          className="mt-3 w-full rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-200 hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300"
+                          disabled={isLocked}
+                          title={isLocked ? t('guestLockedTitle') : undefined}
+                          className="mt-3 w-full rounded-md bg-emerald-600 px-3 py-1.5 text-xs font-semibold text-white transition-colors duration-200 hover:bg-emerald-700 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:bg-stone-400 dark:disabled:bg-stone-700"
                         >
-                          {t('catalogBuy')}
+                          {isLocked ? t('guestBuyLocked') : t('catalogBuy')}
                         </button>
                       )}
                     </div>

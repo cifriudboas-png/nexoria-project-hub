@@ -19,10 +19,28 @@ type Face = {
   shade: number;
 };
 
+const shadeCache = new Map<string, string>();
+
+/**
+ * Darkens a color by `shade` (1 = unchanged) and returns a plain color.
+ * Plain colors are much cheaper to repaint every frame than gradient overlays.
+ */
 export function faceBackground(color: string, shade: number): string {
   if (shade >= 1) return color;
-  const overlay = 1 - shade;
-  return `linear-gradient(rgba(0,0,0,${overlay}), rgba(0,0,0,${overlay})), ${color}`;
+  const cacheKey = `${color}|${shade}`;
+  const cached = shadeCache.get(cacheKey);
+  if (cached) return cached;
+  const hex = /^#([0-9a-f]{3}|[0-9a-f]{6})$/i.exec(color)?.[1];
+  if (!hex) {
+    // Non-hex colors fall back to the old overlay approach.
+    const overlay = 1 - shade;
+    return `linear-gradient(rgba(0,0,0,${overlay}), rgba(0,0,0,${overlay})), ${color}`;
+  }
+  const full = hex.length === 3 ? hex.replace(/./g, (c) => c + c) : hex;
+  const channels = [0, 2, 4].map((i) => Math.round(parseInt(full.slice(i, i + 2), 16) * shade));
+  const result = `rgb(${channels.join(',')})`;
+  shadeCache.set(cacheKey, result);
+  return result;
 }
 
 export default function CharacterBlock({ x, y, z = 0, w, h, d, color, front }: CharacterBlockProps) {

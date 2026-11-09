@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Check, PackageOpen } from 'lucide-react';
 import type { CharacterLook } from '@/components/avatar/characterAppearances';
+import GuestLockedNotice from '@/components/home/GuestLockedNotice';
 import ItemThumbnail from '@/components/home/ItemThumbnail';
 import { HAIR_ITEMS, SHIRT_ITEMS, type HairId, type ShirtId } from '@/lib/avatar';
 import { usePreferences } from '@/lib/preferences-context';
@@ -8,6 +9,8 @@ import type { TranslationKey } from '@/lib/translations';
 
 type InventoryViewProps = {
   look: CharacterLook;
+  /** Guests can look but not change their character. */
+  isLocked?: boolean;
   ownedHair: HairId[];
   equippedShirt: ShirtId | null;
   equippedHair: HairId | null;
@@ -28,6 +31,7 @@ type InventoryEntry = {
 
 export default function InventoryView({
   look,
+  isLocked = false,
   ownedHair,
   equippedShirt,
   equippedHair,
@@ -77,6 +81,8 @@ export default function InventoryView({
         </button>
       </div>
 
+      {isLocked && <GuestLockedNotice />}
+
       {entries.length > 0 ? (
         <>
           <div className="mt-6 grid grid-cols-2 gap-4 sm:grid-cols-3 md:grid-cols-4 xl:grid-cols-5">
@@ -101,7 +107,9 @@ export default function InventoryView({
                     type="button"
                     aria-pressed={entry.isEquipped}
                     onClick={entry.onToggle}
-                    className={`mt-3 w-full rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 ${
+                    disabled={isLocked}
+                    title={isLocked ? t('guestLockedTitle') : undefined}
+                    className={`mt-3 w-full rounded-md px-3 py-1.5 text-xs font-semibold transition-colors duration-200 focus:outline-none focus-visible:ring-4 focus-visible:ring-emerald-300 disabled:cursor-not-allowed disabled:opacity-60 ${
                       entry.isEquipped
                         ? 'bg-stone-200 text-stone-800 hover:bg-stone-300 dark:bg-stone-800 dark:text-stone-100 dark:hover:bg-stone-700'
                         : 'bg-emerald-600 text-white hover:bg-emerald-700'

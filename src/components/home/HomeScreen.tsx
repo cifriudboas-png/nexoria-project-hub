@@ -63,11 +63,12 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
     };
   }, [isGuest]);
 
+  // Guests cannot change their character or buy items.
   const handleEquipShirt = async (shirt: ShirtId | null) => {
+    if (isGuest) return;
     const previous = equippedShirt;
     setEquippedShirt(shirt);
     setSaveFailed(false);
-    if (isGuest) return;
     setIsSaving(true);
     try {
       await saveEquippedShirt(shirt);
@@ -80,10 +81,10 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
   };
 
   const handleEquipHair = async (hair: HairId | null) => {
+    if (isGuest) return;
     const previous = equippedHair;
     setEquippedHair(hair);
     setSaveFailed(false);
-    if (isGuest) return;
     setIsSaving(true);
     try {
       await saveEquippedHair(hair);
@@ -95,10 +96,10 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
     }
   };
 
-  // Guests' purchases only last for this visit; signed-in purchases are saved.
   const handlePurchase = async (hair: HairId) => {
+    if (isGuest) throw new Error('Guests cannot buy items');
     const price = getHairItem(hair)?.priceNexos ?? 0;
-    if (!isGuest) await purchaseItem(hair);
+    await purchaseItem(hair);
     setOwnedHair((current) => (current.includes(hair) ? current : [...current, hair]));
     setNexos((current) => current - price);
   };
@@ -126,6 +127,7 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
               equippedShirt={equippedShirt}
               equippedHair={equippedHair}
               ownedHair={ownedHair}
+              isLocked={isGuest}
               isSaving={isSaving}
               saveFailed={saveFailed}
               onEquipShirt={handleEquipShirt}
@@ -135,6 +137,7 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
           ) : view === 'catalog' ? (
             <CatalogView
               look={look}
+              isLocked={isGuest}
               nexos={nexos}
               ownedHair={ownedHair}
               onPurchase={handlePurchase}
@@ -143,6 +146,7 @@ export default function HomeScreen({ account, onSignOut }: HomeScreenProps) {
           ) : view === 'inventory' ? (
             <InventoryView
               look={look}
+              isLocked={isGuest}
               ownedHair={ownedHair}
               equippedShirt={equippedShirt}
               equippedHair={equippedHair}
