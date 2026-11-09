@@ -98,7 +98,7 @@ export default function CharacterViewer({ className, framing, look, interactive 
         className="absolute left-1/2 top-1/2 h-0 w-0"
         style={{ transformStyle: 'preserve-3d', willChange: 'transform' }}
       >
-        <CharacterModel appearance={CHARACTER_APPEARANCES[look]} shirtImageUrl={getShirtItem(shirt)?.imageUrl} />
+        <CharacterModel appearance={CHARACTER_APPEARANCES[look]} shirtImageUrl={getShirtItem(shirt)?.imageUrl ?? null} />
       </div>
     </div>
   );
