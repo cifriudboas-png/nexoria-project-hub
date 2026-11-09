@@ -40,10 +40,6 @@ const SPIKES: SpikeShape[] = [
   // Long sideburns down the sides of the face
   { x: -22, y: -48, z: 15, base: 6, height: 22, rz: 178 },
   { x: 22, y: -48, z: 15, base: 6, height: 22, rz: 182 },
-  // Fringe over the forehead, with a small dip in the middle
-  { x: -11, y: -50, z: 20, base: 9, height: 6, rz: 185 },
-  { x: 1, y: -50, z: 20, base: 10, height: 9, rz: 180 },
-  { x: 12, y: -50, z: 20, base: 9, height: 6, rz: 175 },
 ];
 
 export default function CoolBlondHair() {
