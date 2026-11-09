@@ -6,17 +6,14 @@ import { SHIRT_ITEMS, type ShirtId } from '@/lib/avatar';
 import { usePreferences } from '@/lib/preferences-context';
 import type { TranslationKey } from '@/lib/translations';
 
-type EditorTab = 'recent' | 'clothing' | 'body' | 'animations' | 'outfits';
+type EditorTab = 'wearing' | 'clothing' | 'body' | 'accessories';
 
 const TABS: { id: EditorTab; label: TranslationKey }[] = [
-  { id: 'recent', label: 'avatarTabRecent' },
+  { id: 'wearing', label: 'avatarTabWearing' },
   { id: 'clothing', label: 'avatarTabClothing' },
   { id: 'body', label: 'avatarTabBody' },
-  { id: 'animations', label: 'avatarTabAnimations' },
-  { id: 'outfits', label: 'avatarTabOutfits' },
+  { id: 'accessories', label: 'avatarTabAccessories' },
 ];
-
-const TABS_WITH_SHIRTS: EditorTab[] = ['recent', 'clothing'];
 
 type AvatarEditorViewProps = {
   look: CharacterLook;
@@ -36,9 +33,14 @@ export default function AvatarEditorView({
   onOpenCatalog,
 }: AvatarEditorViewProps) {
   const { t } = usePreferences();
-  const [tab, setTab] = useState<EditorTab>('recent');
-  const items = TABS_WITH_SHIRTS.includes(tab) ? SHIRT_ITEMS : [];
-  const tabLabel = TABS.find((entry) => entry.id === tab)?.label ?? 'avatarTabRecent';
+  const [tab, setTab] = useState<EditorTab>('wearing');
+  const items =
+    tab === 'clothing'
+      ? SHIRT_ITEMS
+      : tab === 'wearing'
+        ? SHIRT_ITEMS.filter((item) => item.id === equippedShirt)
+        : [];
+  const tabLabel = TABS.find((entry) => entry.id === tab)?.label ?? 'avatarTabWearing';
 
   return (
     <div className="mx-auto max-w-6xl">
